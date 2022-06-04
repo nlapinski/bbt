@@ -62,14 +62,14 @@ static void ShowExampleAppConsole(bool* p_open)
     static ExampleAppConsole console6;
     static ExampleAppConsole console7;
     static ExampleAppConsole console8;
-    console1.Draw("mod 1", p_open,0,0);
-    console2.Draw("mod 2", p_open,1,0);
-    console3.Draw("mod 3", p_open,2,0);
-    console4.Draw("mod 4", p_open,3,0);
-    console5.Draw("mod 5", p_open,0,1);
-    console6.Draw("mod 6", p_open,1,1);
-    console7.Draw("mod 7", p_open,2,1);
-    console8.Draw("mod 8", p_open,3,1);
+    console1.Draw("mod 1", p_open,0,0,0);
+    console2.Draw("mod 2", p_open,1,0,1);
+    console3.Draw("mod 3", p_open,2,0,2);
+    console4.Draw("mod 4", p_open,3,0,3);
+    console5.Draw("mod 5", p_open,0,1,4);
+    console6.Draw("mod 6", p_open,1,1,5);
+    console7.Draw("mod 7", p_open,2,1,6);
+    console8.Draw("mod 8", p_open,3,1,7);
 }
 
 void textbox(){

@@ -1,6 +1,9 @@
 /* mraa header */
 #include "mraa/spi.h"
 
+//global spi context
+extern mraa_spi_context spi;
+
 static void write_pin(mraa_spi_context spi,int pin,int val){
 
     uint8_t low = val & 0xff;
@@ -142,7 +145,7 @@ struct ExampleAppConsole
         Items.push_back(Strdup(buf));
     }
 
-    void    Draw(const char* title, bool* p_open,int x , int y)
+    void    Draw(const char* title, bool* p_open,int x , int y, int pin)
     {
         //ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
 
@@ -187,6 +190,8 @@ struct ExampleAppConsole
             }
             adc1arr[IDX] = (float)res;
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -100, 100, ImVec2(wsize.x,100));
+
+            write_pin(spi,pin,(int)res);
 
         }
 
