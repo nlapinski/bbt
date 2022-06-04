@@ -110,7 +110,7 @@ struct ExampleAppConsole
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
-        ExecCommand("calc (((t*10)%65535)-32768)");
+        ExecCommand("calc (((t*1000)%65535)-32768)");
     }
     ~ExampleAppConsole()
     {

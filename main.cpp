@@ -25,9 +25,11 @@
 /* SPI declaration */
 #define SPI_BUS 0
 
+
 /* SPI frequency in Hz */
 //15mhz
-#define SPI_FREQ 15000000
+//#define SPI_FREQ 15000000
+#define SPI_FREQ 10000000
 
 //global spi context
 mraa_spi_context spi;
