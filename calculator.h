@@ -340,7 +340,7 @@ long long calc( char* argv )  // NOLINT(bugprone-exception-escape)
    long long ret = 0;
 
    if( pegtl::analyze< calculator::grammar >() != 0 ) {
-      std::cerr << "parse error" << std::endl;
+      //std::cerr << "parse error" << std::endl;
       return 1;
    }
 
@@ -358,9 +358,9 @@ long long calc( char* argv )  // NOLINT(bugprone-exception-escape)
       ret = (long long)s.finish();
       return ret;
    }
-   else {
-      std::cerr << "parse error for: " << argv << std::endl;
-   }
+   //else {
+   //   std::cerr << "parse error for: " << argv << std::endl;
+   //}
 
    return 0;
 }

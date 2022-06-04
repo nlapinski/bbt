@@ -110,7 +110,7 @@ struct ExampleAppConsole
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
-        ExecCommand("calc (((t*10)%100)-50)*2");
+        ExecCommand("calc (((t*10)%65535)-32768)");
     }
     ~ExampleAppConsole()
     {
@@ -189,10 +189,10 @@ struct ExampleAppConsole
                 IDX=0;
             }
             adc1arr[IDX] = (float)res;
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -100, 100, ImVec2(wsize.x,100));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
 
-            write_pin(spi,pin,(int)res);
-            printf("result %d", res);
+            write_pin(spi,pin,(int)(res)+32767);
+            //printf("result %d", res);
 
         }
 
