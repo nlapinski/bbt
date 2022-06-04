@@ -20,6 +20,7 @@
 #include "calculator.h"
 #include "console.h"
 
+
 static void ShowExampleAppConsole(bool* p_open)
 {
     static ExampleAppConsole console1;
