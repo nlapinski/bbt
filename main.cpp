@@ -21,8 +21,6 @@
 #include "console.h"
 
 
-/* mraa header */
-#include "mraa/spi.h"
 
 /* SPI declaration */
 #define SPI_BUS 0
@@ -34,19 +32,6 @@
 //global spi context
 mraa_spi_context spi;
 
-static void write_pin(mraa_spi_context spi,int pin,int val){
-
-    uint8_t low = val & 0xff;
-    uint8_t high=(val>>8) & 0xff;
-    //uint8_t p1= 0x30 | pin;
-    uint8_t pat[4];
-    pat[0] =0x00;
-    pat[1]=0x30 | pin;
-    pat[2]=high;
-    pat[3]=low;
-    mraa_spi_write_buf(spi, pat, 4);
-
-}
 
 
 
