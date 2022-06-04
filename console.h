@@ -95,7 +95,7 @@ struct ExampleAppConsole
     unsigned long long    CurrentFrame;
     int                   IDX;
     float                 adc1arr[100];
-    int                   TimeConst;
+    unsigned long long    TimeConst;
     ExampleAppConsole()
     {
         ClearLog();
