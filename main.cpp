@@ -21,6 +21,52 @@
 #include "console.h"
 
 
+/* mraa header */
+//#include "mraa/spi.h"
+
+/* SPI declaration */
+#define SPI_BUS 0
+
+/* SPI frequency in Hz */
+//15mhz
+#define SPI_FREQ 15000000
+
+//global spi context
+//mraa_spi_context spi;
+
+static void write_pin(mraa_spi_context spi,int pin,int val){
+
+    uint8_t low = val & 0xff;
+    uint8_t high=(val>>8) & 0xff;
+    //uint8_t p1= 0x30 | pin;
+    uint8_t pat[4];
+    pat[0] =0x00;
+    pat[1]=0x30 | pin;
+    pat[2]=high;
+    pat[3]=low;
+    //mraa_spi_write_buf(spi, pat, 4);
+
+}
+
+
+
+void init_dac(){
+
+    //sleep_us(10000);
+    //zero out dacs
+    for(int i=0;i<16;i++){
+        mraa_spi_write(spi,0x00);
+        mraa_spi_write(spi,0x30+i);
+        mraa_spi_write(spi,0x00);
+        mraa_spi_write(spi,0x00);
+        //sleep_us(10000);
+    }
+
+
+}
+
+
+
 static void ShowExampleAppConsole(bool* p_open)
 {
     static ExampleAppConsole console1;
@@ -50,9 +96,28 @@ void textbox(){
 //int main(int, char**)
 int main( int argc, char** argv )
 {
+    //mraa SPI setup
+    //mraa_result_t status = MRAA_SUCCESS;
+    //status = mraa_init();
+    //if(status != MRAA_SUCCESS){
+    //    printf("SPI error \n");
+    //}
+    
+    //mraa init stuff
+    //  spi = mraa_spi_init(SPI_BUS);
+    /* set SPI frequency */
+    //status = mraa_spi_frequency(spi, SPI_FREQ);
+    //if(status!= MRAA_SUCCESS){
+    //        printf("SPI error \n");
+    //}
+    /* set big endian mode */
+    //lt2668 is MSB LSB
+    //status = mraa_spi_lsbmode(spi, 1);
+
     //std::string aaa = "1+1+19";
     //long res = calc((char*)aaa.c_str());
     //printf("result! %ld \n",res);
+    //init_dac();
 
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -208,6 +273,11 @@ int main( int argc, char** argv )
     }
 
     // Cleanup
+    //mraa_spi_stop(spi);
+    ////mraa_deinit();
+
+    
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
