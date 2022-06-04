@@ -4,7 +4,7 @@
 //global spi context
 extern mraa_spi_context spi;
 
-static void write_pin(mraa_spi_context spi,int pin,int val){
+static void write_pin(mraa_spi_context spi,int pin,long long val){
 
     uint8_t low = val & 0xff;
     uint8_t high=(val>>8) & 0xff;
@@ -191,7 +191,7 @@ struct ExampleAppConsole
             adc1arr[IDX] = (float)res;
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -100, 100, ImVec2(wsize.x,100));
 
-            write_pin(spi,pin,(int)res);
+            write_pin(spi,pin,res);
 
         }
 
