@@ -95,6 +95,7 @@ struct ExampleAppConsole
     unsigned long long    CurrentFrame;
     int                   IDX;
     float                 adc1arr[100];
+    int                   TimeConst;
     ExampleAppConsole()
     {
         ClearLog();
@@ -107,6 +108,8 @@ struct ExampleAppConsole
         Commands.push_back("CLEAR");
         Commands.push_back("CLASSIFY");
         Commands.push_back("CALC");
+        Commands.push_back("TIME");
+        TimeConst =1;
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
@@ -169,7 +172,7 @@ struct ExampleAppConsole
         {
             //unsigned long long t = ImGui::GetFrameCount();
 
-            CurrentFrame+=1;
+            CurrentFrame+=TimeConst;
             unsigned long long t = CurrentFrame;
             char temp_str[256];
             strcpy(temp_str,LastCommand);
@@ -295,6 +298,15 @@ struct ExampleAppConsole
         {
             CurrentFrame=0;
             AddLog("! reset frame counter to zero");
+        }
+        else if (stristr4(command_line, "TIME") != NULL)
+        {
+            
+            
+            TimeConst = (int)atoi(command_line+5);
+            AddLog("! set new time constant %s", command_line+5);
+            //long res = calc((char*)LastCommand);        
+            //AddLog("# result: %ld", res);
         }
         else if (stristr4(command_line, "CALC") != NULL)
         {
