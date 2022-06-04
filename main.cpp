@@ -7,6 +7,8 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <string.h>
+
 #include <SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -15,10 +17,42 @@
 #endif
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
+#include "calculator.h"
+#include "console.h"
+
+static void ShowExampleAppConsole(bool* p_open)
+{
+    static ExampleAppConsole console1;
+    static ExampleAppConsole console2;
+    static ExampleAppConsole console3;
+    static ExampleAppConsole console4;
+    static ExampleAppConsole console5;
+    static ExampleAppConsole console6;
+    static ExampleAppConsole console7;
+    static ExampleAppConsole console8;
+    console1.Draw("mod 1", p_open,0,0);
+    console2.Draw("mod 2", p_open,1,0);
+    console3.Draw("mod 3", p_open,2,0);
+    console4.Draw("mod 4", p_open,3,0);
+    console5.Draw("mod 5", p_open,0,1);
+    console6.Draw("mod 6", p_open,1,1);
+    console7.Draw("mod 7", p_open,2,1);
+    console8.Draw("mod 8", p_open,3,1);
+}
+
+void textbox(){
+    static char name[128] = ""; 
+    ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
+}
 
 // Main code
-int main(int, char**)
+//int main(int, char**)
+int main( int argc, char** argv )
 {
+    //std::string aaa = "1+1+19";
+    //long res = calc((char*)aaa.c_str());
+    //printf("result! %ld \n",res);
+
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
@@ -99,7 +133,7 @@ int main(int, char**)
     //bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-
+    int cur_mod=0;
     // Main loop
     bool done = false;
     while (!done)
@@ -110,86 +144,59 @@ int main(int, char**)
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         SDL_Event event;
+
+        if(ImGui::IsKeyPressed(ImGuiKey_Escape))
+            done = true;    
+
+
+
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
+
             if (event.type == SDL_QUIT)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-                done = true;
-            
-            if(ImGui::IsKeyPressed(SDL_SCANCODE_Q)){
-                done = true;    
-            }
+                done = true;        
         }
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        //if (show_demo_window)
-            //ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-
-  
-
-            for(int i = 0;i<4;i++){
-
-                for(int j=0;j<2;j++){
+        bool console1=true;
+        ShowExampleAppConsole(&console1);
 
 
+        char focus_window[128];
 
-                      
-                    ImVec2 fraction = ImVec2(1.0/4.0,1.0/2.0);
-                    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize*fraction);
+        if(ImGui::IsKeyPressed(ImGuiKey_Tab)){
+            cur_mod+=1;
 
-                    ImVec2 new_size = ImGui::GetIO().DisplaySize*fraction;
-                    float ox = new_size.x * i;
-                    float oy = new_size.y * j;
-                    ImVec2 new_p = ImVec2(ox,oy);                
-                    ImGui::SetNextWindowPos(new_p);
-
-                      
-                    char window[128];
-
-                    //sprintf(str, "hello %s", "world");
-                    snprintf(window, 128, "module x%d y%d", (1+i)*(j+1),j);
-
-                    ImGui::Begin(window,NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse   );                          // Create a window called "Hello, world!" and append into it.
-
-                    ImGui::SameLine();
-
-                    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-                    ImGui::Text("%d",ImGui::GetFrameCount());
-                    ImGui::End();
-
-                }
-
+            if(cur_mod>8){
+                cur_mod=0;
             }
 
-
-
-
+            snprintf(focus_window, 128, "mod %d", cur_mod);
+            ImGui::SetWindowFocus((const char*)focus_window);
         }
-
-
         /*
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+        if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)){
+            current_x+=1;
+            if((current_x)>4){
+                current_x=1;
+                current_y+=1;                    
+            }
+            if(current_y>2){
+                current_y=1;
+                current_x=1;
+            }
+            snprintf(focus_window, 128, "mod %d", (current_x),current_y);
+            ImGui::SetWindowFocus((const char*)focus_window);
         }
         */
 
+ 
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
