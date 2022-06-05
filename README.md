@@ -1,7 +1,6 @@
 use bytebeat expressions to drive a CV interaface
 
-![image](https://user-images.githubusercontent.com/4634469/172029532-9f991aec-dc67-45ea-bed2-9169a6b02717.png)
-
+![image](https://user-images.githubusercontent.com/4634469/172029579-6000f5a3-b21f-47c0-9aba-77f57c4522aa.png)
 
 # How to Build
 
