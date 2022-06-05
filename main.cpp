@@ -114,6 +114,7 @@ int main( int argc, char** argv )
         return -1;
     }
 
+
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
@@ -185,12 +186,13 @@ int main( int argc, char** argv )
     //bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+
     int cur_mod=0;
     // Main loop
     bool done = false;
     while (!done)
     {
-        printf("%d",ImGui::GetIO().Framerate);
+        //printf("%f \n",ImGui::GetIO().Framerate);
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.

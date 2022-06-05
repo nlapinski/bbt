@@ -113,7 +113,7 @@ struct ExampleAppConsole
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
-        ExecCommand("calc (((t*1000)%65535)-32768)");
+        ExecCommand("calc (t*10)%256");
     }
     ~ExampleAppConsole()
     {
@@ -191,7 +191,7 @@ struct ExampleAppConsole
             if(IDX>100){
                 IDX=0;
             }
-            adc1arr[IDX] = (float)res;
+            adc1arr[IDX] = (float)((res*256)-32767);
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
 
             write_pin(spi,pin,(int)(res)+32767);
@@ -256,7 +256,8 @@ struct ExampleAppConsole
             ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
         
         ImGui::Text("Expanded: %s", ResultBuf); 
-        ImGui::Text("Value: %s", ResultValue); 
+        ImGui::Text("Value: %s", ResultValue);
+	ImGui::Text("Time: %llu",CurrentFrame);	
 
         ImGui::End();
     }
