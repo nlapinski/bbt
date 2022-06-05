@@ -194,7 +194,7 @@ struct ExampleAppConsole
             adc1arr[IDX] = (float)((res*256)-32767);
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
 
-            write_pin(spi,pin,(int)(res)+32767);
+            write_pin(spi,pin,(int)(res*256)-32767);
             //printf("result %d", res);
 
         }

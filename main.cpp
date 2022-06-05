@@ -100,6 +100,7 @@ int main( int argc, char** argv )
     //lt2668 is MSB LSB
     status = mraa_spi_lsbmode(spi, 1);
 
+
     //std::string aaa = "1+1+19";
     //long res = calc((char*)aaa.c_str());
     //printf("result! %ld \n",res);
