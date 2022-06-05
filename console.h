@@ -76,6 +76,48 @@ char *stristr4(const char *haystack, const char *needle) {
     return NULL;
 }
 
+void task(int t){
+    //flop = (t>>8&t)*(t>>15&t);
+    //flop = t<<((t>>8&t)|(t>>14&t));
+    //flop = (t*(t>>5|t>>8))>>(t>>16&t);
+    int flop = ((t*t)/(t^t>>8))&t;
+    //(t>>8&t)*(t>>15&t)
+    write_pin(spi,0,256*flop);
+}
+
+void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr){
+    //int t = 0;
+    int IDX=0;
+    while(true){
+
+        *CurrentFrame+=1;
+        int t = (int)*CurrentFrame;
+        char temp_str[256];
+        strcpy(temp_str,LastCommand);
+        char time_str[256];
+        snprintf(time_str,256,"%d",t);
+        char replace[2] = "t";
+        char* result;
+        result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
+        long long res = calc((char*)result);
+        strcpy(ResultBuf,result);
+        snprintf(ResultValue,256,"%d",res);
+        //printf("pin->%d time %d \n",*pin,t);
+        //int flop = ((t*t)/(t^t>>8))&t;
+        //write_pin(spi,*pin,256*flop);
+        write_pin(spi,*pin,(int)(res*256));
+
+        IDX+=1;
+        if(IDX>200){
+            IDX=0;
+        }
+        adc1arr[IDX] = (float)((res*256)-32767);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(*ms)); 
+    }
+}
+
+
 
 // Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
 // For the console example, we are using a more C++ like approach of declaring a class to hold both data and functions.
@@ -94,8 +136,13 @@ struct ExampleAppConsole
     char                  ResultValue[256];
     unsigned long long    CurrentFrame;
     int                   IDX;
-    float                 adc1arr[100];
+    float                 adc1arr[200];
     unsigned long long    TimeConst;
+    std::thread           Worker;
+    int                   TimeMs;
+    char                  Cmd[256];
+    int                   Pin;
+
     ExampleAppConsole()
     {
         ClearLog();
@@ -114,6 +161,9 @@ struct ExampleAppConsole
         ScrollToBottom = false;
         AddLog("CV calc");
         ExecCommand("calc (t*10)%256");
+        TimeMs = 1;
+        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr);
+        Worker.detach();
     }
     ~ExampleAppConsole()
     {
@@ -128,6 +178,10 @@ struct ExampleAppConsole
     static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)s, len); }
     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
+
+    //std::thread spi_worker(spi_task,100);
+    //spi_worker.detach();
+
 
     void    ClearLog()
     {
@@ -148,58 +202,26 @@ struct ExampleAppConsole
         Items.push_back(Strdup(buf));
     }
 
+
     void    Draw(const char* title, bool* p_open,int x , int y, int pin)
     {
-        //ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
-
-                      
+        Pin = pin;                     
         ImVec2 fraction = ImVec2(1.0/4.0,1.0/2.0);
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize*fraction);
-
         ImVec2 new_size = ImGui::GetIO().DisplaySize*fraction;
         float ox = new_size.x * x;
         float oy = new_size.y * y;
         ImVec2 new_p = ImVec2(ox,oy);                
         ImGui::SetNextWindowPos(new_p);
 
-        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse))
+        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar ))
         {
             ImGui::End();
             return;
         }
         ImVec2 wsize = ImGui::GetWindowSize();
         //manage expression replacement with time 
-        {
-            //unsigned long long t = ImGui::GetFrameCount();
-
-            CurrentFrame+=TimeConst;
-            unsigned long long t = CurrentFrame;
-            char temp_str[256];
-            strcpy(temp_str,LastCommand);
-            char time_str[256];
-            snprintf(time_str,256,"%llu",t);
-            char replace[2] = "t";
-            char* result;
-            result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
-            long long res = calc((char*)result);
-            //AddLog("result: %ld  %s \n", res, result);
-            strcpy(ResultBuf,result);
-            snprintf(ResultValue,256,"%lld",res);
-
-            
-            IDX+=1;
-            if(IDX>100){
-                IDX=0;
-            }
-            adc1arr[IDX] = (float)((res*256)-32767);
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
-
-            write_pin(spi,pin,(int)(res*256)-32767);
-            //printf("result %d", res);
-
-        }
-
-
+        ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
 
         // Reserve enough left-over height for 1 separator + 1 input text
         const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -304,7 +326,7 @@ struct ExampleAppConsole
         {
             
             
-            TimeConst = (int)atoi(command_line+5);
+            TimeMs = (int)atoi(command_line+5);
             AddLog("! set new time constant %s", command_line+5);
             //long res = calc((char*)LastCommand);        
             //AddLog("# result: %ld", res);

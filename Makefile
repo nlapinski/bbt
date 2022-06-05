@@ -45,10 +45,10 @@ LIBS =
 ifeq ($(UNAME_S), Linux) #LINUX
 	
 	ECHO_MESSAGE = "Linux"
-	LIBS += $(LINUX_GL_LIBS) -ldl `sdl2-config --libs` -lmraa
+	LIBS += $(LINUX_GL_LIBS) -ldl `sdl2-config --libs` -lmraa -lpthread
 
 	CXXFLAGS += `sdl2-config --cflags`
-	CXXFLAGS += -DTAO_PEGTL_STD_EXPERIMENTAL_FILESYSTEM=1
+	CXXFLAGS += -DTAO_PEGTL_STD_EXPERIMENTAL_FILESYSTEM=0
 	CFLAGS = $(CXXFLAGS)
 endif
 

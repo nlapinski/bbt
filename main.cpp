@@ -2,12 +2,15 @@
 // (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <string.h>
+#include <thread>
 
 #include <SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -15,6 +18,7 @@
 #else
 #include <SDL_opengl.h>
 #endif
+#include <chrono>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 #include "calculator.h"
@@ -22,19 +26,18 @@
 
 
 
+
 /* SPI declaration */
 #define SPI_BUS 0
-
 /* SPI frequency in Hz */
 //15mhz
-#define SPI_FREQ 15000000
+//#define SPI_FREQ 15000000
 //#define SPI_FREQ 10000000
+#define SPI_FREQ 50000000
+//#define SPI_FREQ 2147773188
 
 //global spi context
 mraa_spi_context spi;
-
-
-
 
 void init_dac(){
 
@@ -50,7 +53,6 @@ void init_dac(){
 
 
 }
-
 
 
 static void ShowExampleAppConsole(bool* p_open)
@@ -78,32 +80,53 @@ void textbox(){
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
 }
 
+//int perf_count = 0;
+
+
 // Main code
-//int main(int, char**)
-int main( int argc, char** argv )
+int main(int, char**)
+//int main( int argc, char** argv )
 {
+    /*
+    setpriority(PRIO_PROCESS, 0, -20);
+    struct sched_param param;
+    param.sched_priority = 1;
+    int canSetRealTimeThreadPriority = (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) == 0);
+    */
+
     //mraa SPI setup
     mraa_result_t status = MRAA_SUCCESS;
     status = mraa_init();
     if(status != MRAA_SUCCESS){
-        printf("SPI error \n");
+        printf("MRAA init error \n");
     }
     
+
     //mraa init stuff
     spi = mraa_spi_init(SPI_BUS);
+    if(status!= MRAA_SUCCESS){
+            printf("SPI init error \n");
+    }
+
     /* set SPI frequency */
     status = mraa_spi_frequency(spi, SPI_FREQ);
+
     if(status!= MRAA_SUCCESS){
-            printf("SPI error \n");
+            printf("SPI clock error \n");
     }
+
+    //status = mraa_spi_bit_per_word(spi, 16);
+    //if(status!= MRAA_SUCCESS){
+            //printf("SPI set bpw error \n");
+    //}
+
     /* set big endian mode */
     //lt2668 is MSB LSB
     status = mraa_spi_lsbmode(spi, 1);
+    if(status!= MRAA_SUCCESS){
+            printf("SPI lsb error \n");
+    }
 
-
-    //std::string aaa = "1+1+19";
-    //long res = calc((char*)aaa.c_str());
-    //printf("result! %ld \n",res);
     init_dac();
 
     // Setup SDL
@@ -146,47 +169,26 @@ int main( int argc, char** argv )
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_FULLSCREEN_DESKTOP);
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1440, 900, window_flags);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
+    //SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
-
-    // Our state
-    //bool show_demo_window = true;
-    //bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 
     int cur_mod=0;
     // Main loop
@@ -221,6 +223,14 @@ int main( int argc, char** argv )
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
         bool console1=true;
+        ///ImVec4 dbg_color;
+        //dbg_color = ImVec4(9.0f, 0.0f, 0.9f, 1.0f);
+        //ImGui::Begin("stats", NULL,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
+        //ImGui::PushStyleColor(ImGuiCol_Text, dbg_color);
+        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        //ImGui::Text("MS write perf count %d KHZ", perf_count*100);
+        //ImGui::PopStyleColor();
+        //ImGui::End();
         ShowExampleAppConsole(&console1);
 
 
