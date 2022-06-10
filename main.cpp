@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <thread>
-
+#include <time.h>
 #include <SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -24,9 +24,6 @@
 #include "calculator.h"
 #include "console.h"
 
-
-
-
 /* SPI declaration */
 #define SPI_BUS 0
 /* SPI frequency in Hz */
@@ -35,6 +32,9 @@
 //#define SPI_FREQ 10000000
 #define SPI_FREQ 50000000
 //#define SPI_FREQ 2147773188
+
+
+
 
 //global spi context
 mraa_spi_context spi;
@@ -50,7 +50,6 @@ void init_dac(){
         mraa_spi_write(spi,0x00);
         //sleep_us(10000);
     }
-
 
 }
 

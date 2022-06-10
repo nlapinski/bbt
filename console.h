@@ -85,6 +85,28 @@ void task(int t){
     write_pin(spi,0,256*flop);
 }
 
+struct timespec deadline;
+
+
+void sleep_us(int microseconds)
+{
+        //struct timespec deadline;
+        clock_gettime(CLOCK_MONOTONIC, &deadline);
+        //clock_gettime(CLOCK_REALTIME, &(deadline));
+
+        // Add the time you want to sleep
+        deadline.tv_nsec += microseconds*1000;
+
+        // Normalize the time to account for the second boundary
+        if(deadline.tv_nsec >= 1000000000) {
+            deadline.tv_nsec -= 1000000000;
+            deadline.tv_sec++;
+        }
+        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
+        //clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &(deadline), NULL);
+
+}
+
 void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr){
     //int t = 0;
     int IDX=0;
@@ -99,21 +121,22 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         char replace[2] = "t";
         char* result;
         result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
-        long long res = calc((char*)result);
+        uint8_t res = (uint8_t)calc((char*)result);
         strcpy(ResultBuf,result);
-        snprintf(ResultValue,256,"%d",res);
+        snprintf(ResultValue,256,"%d",(res));
         //printf("pin->%d time %d \n",*pin,t);
         //int flop = ((t*t)/(t^t>>8))&t;
         //write_pin(spi,*pin,256*flop);
-        write_pin(spi,*pin,(int)(res*256));
+        write_pin(spi,*pin,(int)((int)res*256));
 
         IDX+=1;
         if(IDX>200){
             IDX=0;
         }
-        adc1arr[IDX] = (float)((res*256)-32767);
+        adc1arr[IDX] = (float)((int)res*256);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(*ms)); 
+        //std::this_thread::sleep_for(std::chrono::milliseconds(*ms)); 
+        sleep_us(*ms);
     }
 }
 
@@ -137,7 +160,6 @@ struct ExampleAppConsole
     unsigned long long    CurrentFrame;
     int                   IDX;
     float                 adc1arr[200];
-    unsigned long long    TimeConst;
     std::thread           Worker;
     int                   TimeMs;
     char                  Cmd[256];
@@ -156,12 +178,12 @@ struct ExampleAppConsole
         Commands.push_back("CLASSIFY");
         Commands.push_back("CALC");
         Commands.push_back("TIME");
-        TimeConst =1;
+
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
-        ExecCommand("calc (t*10)%256");
-        TimeMs = 1;
+        ExecCommand("calc (t*5)%256");
+        TimeMs = 10000;
         Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr);
         Worker.detach();
     }
@@ -170,7 +192,6 @@ struct ExampleAppConsole
         ClearLog();
         for (int i = 0; i < History.Size; i++)
             free(History[i]);
-
     }
 
     // Portable helpers
@@ -178,10 +199,6 @@ struct ExampleAppConsole
     static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)s, len); }
     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
-
-    //std::thread spi_worker(spi_task,100);
-    //spi_worker.detach();
-
 
     void    ClearLog()
     {
@@ -221,7 +238,7 @@ struct ExampleAppConsole
         }
         ImVec2 wsize = ImGui::GetWindowSize();
         //manage expression replacement with time 
-        ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, -32768, 32767, ImVec2(wsize.x,100));
+        ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
 
         // Reserve enough left-over height for 1 separator + 1 input text
         const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
