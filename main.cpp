@@ -2,8 +2,17 @@
 // (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
-#include <sys/time.h>
-#include <sys/resource.h>
+
+#ifdef __linux__ 
+
+    #include <sys/time.h>
+    #include <sys/resource.h>
+#endif
+#ifdef __MINGW32__
+
+#endif
+
+
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"

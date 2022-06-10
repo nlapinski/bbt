@@ -1,5 +1,13 @@
-/* mraa header */
-#include "mraa/spi.h"
+
+
+
+#ifdef __linux__ 
+    /* mraa header */
+    #include "mraa/spi.h"
+#endif
+#ifdef __MINGW32__
+    #include "winmraa.h"
+#endif
 
 //global spi context
 extern mraa_spi_context spi;
