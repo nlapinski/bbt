@@ -1,16 +1,38 @@
-
-
-
+#include <math.h>
 #ifdef __linux__ 
     /* mraa header */
     #include "mraa/spi.h"
 #endif
 #ifdef __MINGW32__
     #include "winmraa.h"
+    #include "pthread.h"
 #endif
 
 //global spi context
 extern mraa_spi_context spi;
+
+//double fit range
+double flt_map(double x, double in_min, double in_max, double out_min, double out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+double clamp(double d, double min, double max) {
+  const double t = d < min ? min : d;
+  return t > max ? max : t;
+}
+
+double round(double d)
+{
+    return floor(d + 0.5);
+}
+
+uint32_t int_map(double input, double input_start, double input_end, double output_start, double output_end){
+    double slope = 1.0 * (output_end - output_start) / (input_end - input_start);
+    //output = output_start + slope * (input - input_start)
+    return (output_start + round(slope * (input - input_start)));
+}
+
 
 static void write_pin(mraa_spi_context spi,int pin,int val){
 
@@ -93,29 +115,40 @@ void task(int t){
     write_pin(spi,0,256*flop);
 }
 
-struct timespec deadline;
+#ifdef __linux__ 
+    struct timespec deadline;
+
+    void sleep_us(int microseconds)
+    {
+
+            //struct timespec deadline;
+            clock_gettime(CLOCK_MONOTONIC, &deadline);
+            //clock_gettime(CLOCK_REALTIME, &(deadline));
+            // Add the time you want to sleep
+            deadline.tv_nsec += microseconds*1000;
+            // Normalize the time to account for the second boundary
+            if(deadline.tv_nsec >= 1000000000) {
+                deadline.tv_nsec -= 1000000000;
+                deadline.tv_sec++;
+            }
+            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
+    }
+#endif
+#ifdef __MINGW32__
+    //clock_nanosleep seems to ot work the same on windows/mingwin so just using std
+    void sleep_us(int microseconds)
+    {
+
+            
+            std::chrono::microseconds dura( microseconds ); 
+            std::this_thread::sleep_for(dura);
+    }
+
+#endif
 
 
-void sleep_us(int microseconds)
-{
-        //struct timespec deadline;
-        clock_gettime(CLOCK_MONOTONIC, &deadline);
-        //clock_gettime(CLOCK_REALTIME, &(deadline));
 
-        // Add the time you want to sleep
-        deadline.tv_nsec += microseconds*1000;
-
-        // Normalize the time to account for the second boundary
-        if(deadline.tv_nsec >= 1000000000) {
-            deadline.tv_nsec -= 1000000000;
-            deadline.tv_sec++;
-        }
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-        //clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &(deadline), NULL);
-
-}
-
-void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr){
+void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
     int IDX=0;
     while(true){
@@ -135,20 +168,43 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         //printf("pin->%d time %d \n",*pin,t);
         //int flop = ((t*t)/(t^t>>8))&t;
         //write_pin(spi,*pin,256*flop);
-        write_pin(spi,*pin,(int)((int)res*256));
+        //double norm = flt_map((double)res,0.0,256.0,*imin,*imax);
+        double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
+        voltage = clamp(voltage,*omin,*omax);
+        uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
+
+
+        //write_pin(spi,*pin,(int)((int)res*256));
+        //if(*pin == 0){
+            //printf("dac output voltage >> %d | float voltage %f \n", dac_voltage, voltage);    
+        //}
+        snprintf(ResultValue,256,"src->%d | fit->%f | voltage-> %d",res,voltage, dac_voltage);
+        
+        write_pin(spi,*pin,(int)(dac_voltage));
 
         IDX+=1;
         if(IDX>200){
             IDX=0;
         }
         adc1arr[IDX] = (float)((int)res*256);
+        adc2arr[IDX] = voltage;
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(*ms)); 
         sleep_us(*ms);
     }
 }
 
-
+std::vector<double> split_args(char* args){
+    std::vector <double> values;
+    char delim[] = " ";
+    char *ptr = strtok(args, delim);
+    while(ptr != NULL)
+    {
+        values.push_back(strtod(ptr,NULL));
+        //printf("'%s %f'\n", ptr, values.back());
+        ptr = strtok(NULL, delim);   
+    }
+    return values;
+}
 
 // Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
 // For the console example, we are using a more C++ like approach of declaring a class to hold both data and functions.
@@ -168,8 +224,13 @@ struct ExampleAppConsole
     unsigned long long    CurrentFrame;
     int                   IDX;
     float                 adc1arr[200];
+    float                 adc2arr[200];
     std::thread           Worker;
     int                   TimeMs;
+    double                IMin;
+    double                IMax;
+    double                OMin;
+    double                OMax;
     char                  Cmd[256];
     int                   Pin;
     int                   Focused;
@@ -187,13 +248,19 @@ struct ExampleAppConsole
         Commands.push_back("CLASSIFY");
         Commands.push_back("CALC");
         Commands.push_back("TIME");
+        Commands.push_back("FIT");
 
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("CV calc");
         ExecCommand("calc (t*5)%256");
+        //ExecCommand("fit 0.0 256.0 -10.0 10.0");
+        OMin =-10.0;
+        OMax = 10.0;
+        IMin =0.0;
+        IMax = 256.0;
         TimeMs = 10000;
-        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr);
+        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
         Worker.detach();
     }
     ~ExampleAppConsole()
@@ -261,15 +328,15 @@ struct ExampleAppConsole
             }            
         }
 
-
+        //////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         if(ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)){
-            //ImGui::SetKeyboardFocusHere(-1);    
             Focused=1;
         }
         else{
             Focused=0;
         }
+        //////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         
         
@@ -281,13 +348,23 @@ struct ExampleAppConsole
         if(!Focused){
             ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
                 //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
-            ImGui::Dummy(ImVec2(0.0f, wsize.y/4));
-                ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
+            ImGui::Dummy(ImVec2(0.0f, wsize.y/9));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/3));
+            ImGui::Dummy(ImVec2(0.0f, wsize.y/16));
+            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,wsize.y/3));
+            ImGui::PopStyleColor();
+
             ImGui::EndChild();
+
         }
 
         if(Focused){
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
+            //colors[ImGuiCol_PlotLines]              = ImVec4(0.78f, 0.00f, 0.52f, 1.00f);
+            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,100));
+            ImGui::PopStyleColor();
 
             // Reserve enough left-over height for 1 separator + 1 input text
             const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -399,20 +476,22 @@ struct ExampleAppConsole
         else if (stristr4(command_line, "TIME") != NULL)
         {
             
-            
             TimeMs = (int)atoi(command_line+5);
             AddLog("! set new time constant %s", command_line+5);
-            //long res = calc((char*)LastCommand);        
-            //AddLog("# result: %ld", res);
+        }
+        else if (stristr4(command_line, "FIT") != NULL)
+        {
+            std::vector<double> split = split_args((char*)command_line+4);
+            IMin = split[0];
+            IMax = split[1];
+            OMin = split[2];
+            OMax = split[3];
+            AddLog("! fit range %f %f >> %f %f", IMin, IMax, OMin,OMax);
         }
         else if (stristr4(command_line, "CALC") != NULL)
         {
-            
-            
             strcpy(LastCommand,command_line+5);
             AddLog("! set new expr %s", command_line+5);
-            //long res = calc((char*)LastCommand);        
-            //AddLog("# result: %ld", res);
         }
         else
         {

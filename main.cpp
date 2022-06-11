@@ -1,19 +1,26 @@
-// Dear ImGui: standalone example application for SDL2 + OpenGL
-// (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
-#include <sys/time.h>
-#ifdef __linux__ 
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Dear ImGui: standalone example application for SDL2 + OpenGL                         //
+// (SDL is a cross-platform general purpose library for handling windows,               //
+// inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)                         //
+// If you are new to Dear ImGui, read documentation from the                            //
+// docs/ folder + read the top of imgui.cpp.                                            //
+// Read online: https://github.com/ocornut/imgui/tree/master/docs                       //
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
-    
+#include <sys/time.h>
+
+//so we can build on mingw+linux
+#ifdef __linux__ 
     #include <sys/resource.h>
 #endif
+
 #ifdef __MINGW32__
 
 #endif
 
 #include "imgui.h"
-
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
@@ -41,10 +48,16 @@
 #define SPI_FREQ 50000000
 //#define SPI_FREQ 2147773188
 
-
-
 //global spi context
 mraa_spi_context spi;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
 
 void init_dac(){
 
@@ -86,9 +99,6 @@ void textbox(){
     static char name[128] = ""; 
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
 }
-
-//int perf_count = 0;
-
 
 // Main code
 int main(int, char**)
@@ -139,6 +149,8 @@ int main(int, char**)
         printf("Error: %s\n", SDL_GetError());
         return -1;
     }
+
+
 
 
     // Decide GL+GLSL versions
@@ -204,10 +216,9 @@ int main(int, char**)
     g.NavDisableHighlight = false;
 
     int cur_mod=0;
+    
     // Main loop
     bool done = false;
-
-    //AntiAliasedLines        = true;             
 
     while (!done)
     {
@@ -276,8 +287,6 @@ int main(int, char**)
         }
         */
 
-
-
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -285,6 +294,12 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
+        
+        //map test
+        //double s = map(sin(counter),-1,1,0,100);
+        //uint32_t ss = int_map(sin(counter),-1,1,0,100);
+        //counter+=.1;
+        //printf("%f %d \n", s, ss);
     }
 
     // Cleanup
