@@ -160,6 +160,23 @@ void task(int t){
 #endif
 
 
+void std_sleep_us(int microseconds)
+{
+    
+        //std::chrono::microseconds dura( microseconds ); 
+        //std::this_thread::sleep_for(dura);
+    bool sleep = true;
+    auto start = std::chrono::steady_clock::now();
+    while(sleep)
+    {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
+        if ( elapsed.count() > microseconds )
+            sleep = false;
+    }
+}
+
+
 void trigger_sample(int idx){
     Mix_PlayChannel(current_channel, _sample[idx], 0);
     current_channel+=1;
@@ -218,7 +235,7 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         adc1arr[IDX] = (float)((int)res*256);
         adc2arr[IDX] = voltage;
 
-        sleep_us(*ms);
+        std_sleep_us(*ms);
     }
 }
 
