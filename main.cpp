@@ -140,26 +140,26 @@ void textbox(){
     static char name[128] = ""; 
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
 }
+#if AUDIO == AUDIO_ON
+    void init_audio(){
+        memset(_sample, 0, sizeof(Mix_Chunk*) * 5);
 
-void init_audio(){
-    memset(_sample, 0, sizeof(Mix_Chunk*) * 5);
+        // Set up the audio stream
+        Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
+        //SDL_PauseAudioDevice(deviceId, 0);
+        Mix_AllocateChannels(32);
 
-    // Set up the audio stream
-    Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
-    //SDL_PauseAudioDevice(deviceId, 0);
-    Mix_AllocateChannels(32);
-
-    // Load waveforms
-    for( int i = 0; i < NUM_WAVEFORMS; i++ )
-    {
-        _sample[i] = Mix_LoadWAV(_waveFileNames[i]);
-        if( _sample[i] == NULL )
+        // Load waveforms
+        for( int i = 0; i < NUM_WAVEFORMS; i++ )
         {
-            fprintf(stderr, "Unable to load wave file: %s\n", _waveFileNames[i]);
+            _sample[i] = Mix_LoadWAV(_waveFileNames[i]);
+            if( _sample[i] == NULL )
+            {
+                fprintf(stderr, "Unable to load wave file: %s\n", _waveFileNames[i]);
+            }
         }
     }
-}
-
+#endif
 // Main code
 int main(int, char**)
 //int main( int argc, char** argv )

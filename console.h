@@ -8,12 +8,20 @@
     #include "pthread.h"
 #endif
 
-#include "SDL_mixer.h"
+#define AUDIO_ON 1
+#define AUDIO_OFF 0
+#define AUDIO AUDIO_OFF
+
+#if AUDIO == AUDIO_ON
+    #include "SDL_mixer.h"
+    extern int current_channel;
+    extern Mix_Chunk* _sample[5];
+#endif
 
 //global spi context
 extern mraa_spi_context spi;
-extern int current_channel;
-extern Mix_Chunk* _sample[5];
+
+
 extern bool reset;
 
 //double fit range
@@ -176,14 +184,15 @@ void std_sleep_us(int microseconds)
     }
 }
 
-
-void trigger_sample(int idx){
-    Mix_PlayChannel(current_channel, _sample[idx], 0);
-    current_channel+=1;
-    if(current_channel>31){
-        current_channel=0;
+#if AUDIO == AUDIO_ON
+    void trigger_sample(int idx){
+        Mix_PlayChannel(current_channel, _sample[idx], 0);
+        current_channel+=1;
+        if(current_channel>31){
+            current_channel=0;
+        }
     }
-}
+#endif
 
 void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
