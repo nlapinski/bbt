@@ -397,17 +397,18 @@ struct ExampleAppConsole
         
 
 
-        ImVec2 wsize = ImGui::GetWindowSize();
+        //ImVec2 wsize = ImGui::GetWindowSize();
 
         //manage expression replacement with time 
         if(!Focused){
             ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
                 //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
             ImGui::Dummy(ImVec2(0.0f, 14.0f));
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2.5));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
             ImGui::Dummy(ImVec2(0.0f, 0.0f));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,wsize.y/2.5));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
+            //printf("%f %f \n", wsize.x,wsize.y/2.5);
             ImGui::PopStyleColor();
 
             ImGui::EndChild();
@@ -415,9 +416,9 @@ struct ExampleAppConsole
         }
 
         if(Focused){
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,70));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,70));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,70));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,70));
             ImGui::PopStyleColor();
 
             // Reserve enough left-over height for 1 separator + 1 input text
