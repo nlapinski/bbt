@@ -262,95 +262,100 @@ struct ExampleAppConsole
         }
 
 
-        //ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow()); // needs imgui_internal.h
-
-        ImVec2 wsize = ImGui::GetWindowSize();
-
-
-        //manage expression replacement with time 
-        ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
-
-        // Reserve enough left-over height for 1 separator + 1 input text
-        const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-        //ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*3), false, ImGuiWindowFlags_NoScrollbar);
-        //ImGuiItemFlags_NoNavDefaultFocus
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
-        //ImGui::PushAllowKeyboardFocus(false);
-
-
-
-        for (int i = 0; i < Items.Size; i++)
-        {
-            const char* item = Items[i];
-            if (!Filter.PassFilter(item))
-                continue;
-
-            // Normally you would store more information in your item than just a string.
-            // (e.g. make Items[] an array of structure, store color/type etc.)
-            ImVec4 color;
-            bool has_color = false;
-            if (strstr(item, "[error]"))          { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
-            else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
-            else if (strncmp(item, "! ", 2) == 0) { color = ImVec4(0.0f, 0.9f, 0.9f, 1.0f); has_color = true; }
-            if (has_color)
-                ImGui::PushStyleColor(ImGuiCol_Text, color);
-            ImGui::TextUnformatted(item);
-            if (has_color)
-                ImGui::PopStyleColor();
-        }
-
-
-        if (ScrollToBottom || (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
-            ImGui::SetScrollHereY(1.0f);
-        ScrollToBottom = false;
-
-        ImGui::PopStyleVar();
-        //ImGui::PopItemFlag();
-        //ImGui::PopAllowKeyboardFocus();
-        ImGui::EndChild();
-        ImGui::Separator();
-
-        // Command-line
-        bool reclaim_focus = false;
-        ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-
-        char focus_widget[128];
-        snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
-
-        if (ImGui::InputText("##Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
-        {
-            //ImGui::ActivateItem(ImGui::GetID("##Input"));
-            //ImGui::SetKeyboardFocusHere();
-            char* s = InputBuf;
-            Strtrim(s);
-            if (s[0])
-                ExecCommand(s);
-            strcpy(s, "");
-            reclaim_focus = true;
-        }
-        // Auto-focus on window apparition
-        //ImGui::SetItemDefaultFocus();
+        //////////////////////////////////////////////////////////////////////////////////////////
         if(ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)){
-            ImGui::SetKeyboardFocusHere(-1);    
+            //ImGui::SetKeyboardFocusHere(-1);    
             Focused=1;
         }
         else{
             Focused=0;
         }
-        // Demonstrate keeping auto focus on the input box
+        //////////////////////////////////////////////////////////////////////////////////////////
         
-        //ImGui::SetKeyboardFocusHere(0); // Auto focus previous widget
-
-        if (reclaim_focus)
-            ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
         
-        ImGui::Text("Expanded: %s", ResultBuf); 
-        ImGui::Text("Value: %s", ResultValue);
-        ImGui::Text("Time: %llu",CurrentFrame);	
 
 
+        ImVec2 wsize = ImGui::GetWindowSize();
+
+        //manage expression replacement with time 
+        if(!Focused){
+            ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+                //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
+            ImGui::Dummy(ImVec2(0.0f, wsize.y/4));
+                ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
+            ImGui::EndChild();
+        }
+
+        if(Focused){
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
+
+            // Reserve enough left-over height for 1 separator + 1 input text
+            const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*3), false, ImGuiWindowFlags_NoScrollbar);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+
+            for (int i = 0; i < Items.Size; i++)
+            {
+                const char* item = Items[i];
+                if (!Filter.PassFilter(item))
+                    continue;
+
+                // Normally you would store more information in your item than just a string.
+                // (e.g. make Items[] an array of structure, store color/type etc.)
+                ImVec4 color;
+                bool has_color = false;
+                if (strstr(item, "[error]"))          { ; has_color = true; }
+                else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
+                else if (strncmp(item, "! ", 2) == 0) { color = ImVec4(0.0f, 0.9f, 0.9f, 1.0f); has_color = true; }
+                if (has_color)
+                    ImGui::PushStyleColor(ImGuiCol_Text, color);
+                ImGui::TextUnformatted(item);
+                if (has_color)
+                    ImGui::PopStyleColor();
+            }
+
+
+            if (ScrollToBottom || (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
+                ImGui::SetScrollHereY(1.0f);
+            ScrollToBottom = false;
+            ImGui::PopStyleVar();
+            ImGui::EndChild();
+            ImGui::Separator();
+
+            // Command-line
+            bool reclaim_focus = false;
+            ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
+
+            char focus_widget[128];
+            snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
+
+            
+
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0,0.9f,.9f,1.0f));
+            if (ImGui::InputText("##Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
+            {
+                char* s = InputBuf;
+                Strtrim(s);
+                if (s[0])
+                    ExecCommand(s);
+                strcpy(s, "");
+                reclaim_focus = true;
+            }
+            ImGui::PopStyleColor();
+            if(Focused){
+                ImGui::SetKeyboardFocusHere(-1);    
+            }
+
+            // Demonstrate keeping auto focus on the input box    
+            if (reclaim_focus)
+                ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+
+            ImGui::Text("Expanded: %s", ResultBuf); 
+            ImGui::Text("Value: %s", ResultValue);
+            ImGui::Text("Time: %llu",CurrentFrame); 
+        }
         ImGui::End();
+
     }
 
     void    ExecCommand(const char* command_line)

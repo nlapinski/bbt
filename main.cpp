@@ -12,8 +12,6 @@
 
 #endif
 
-
-
 #include "imgui.h"
 
 #include "imgui_impl_sdl.h"
@@ -33,7 +31,7 @@
 #include "imgui_internal.h"
 #include "calculator.h"
 #include "console.h"
-
+#include "theme.h"
 /* SPI declaration */
 #define SPI_BUS 0
 /* SPI frequency in Hz */
@@ -124,13 +122,8 @@ int main(int, char**)
             printf("SPI clock error \n");
     }
 
-    //status = mraa_spi_bit_per_word(spi, 16);
-    //if(status!= MRAA_SUCCESS){
-            //printf("SPI set bpw error \n");
-    //}
-
     /* set big endian mode */
-    //lt2668 is MSB LSB
+    //lt2668 is MSB LSB - this causes errors but is needed?
     status = mraa_spi_lsbmode(spi, 1);
     if(status!= MRAA_SUCCESS){
             printf("SPI lsb error \n");
@@ -174,7 +167,8 @@ int main(int, char**)
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    //8 or 16? not sure which or if any faster
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     SDL_DisplayMode DM;
@@ -182,10 +176,9 @@ int main(int, char**)
     auto swidth = DM.w;
     auto sheight = DM.h;
 
-    
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_FULLSCREEN_DESKTOP);
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, swidth, sheight, window_flags);
+    SDL_Window* window = SDL_CreateWindow("bytebeat cv", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, swidth, sheight, window_flags);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -196,35 +189,31 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |=  ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;     // Enable Keyboard Controls
-    //io.ImGuiConfigFlags_NavEnableKeyboard = false;
-    //io.ConfigViewportsNoDefaultParent = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+    imtheme();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
+    
+    ImGuiContext& g = *GImGui;    
+    g.NavDisableHighlight = false;
 
     int cur_mod=0;
     // Main loop
     bool done = false;
 
-    ImGuiContext& g = *GImGui;
-    //ImGuiIO& io = ImGui::GetIO();
-    
-    g.NavDisableHighlight = false;
+    //AntiAliasedLines        = true;             
 
     while (!done)
     {
+
         //printf("%f \n",ImGui::GetIO().Framerate);
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+
         SDL_Event event;
 
         if(ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -245,62 +234,31 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
         bool console1=true;
-        ///ImVec4 dbg_color;
-        //dbg_color = ImVec4(9.0f, 0.0f, 0.9f, 1.0f);
-        //ImGui::Begin("stats", NULL,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
-        //ImGui::PushStyleColor(ImGuiCol_Text, dbg_color);
-        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        //ImGui::Text("MS write perf count %d KHZ", perf_count*100);
-        //ImGui::PopStyleColor();
-        //ImGui::End();
-
+        //ImGui::ShowDemoWindow();
         ShowExampleAppConsole(&console1);
 
+        //debug 
         //ImGui::ShowStackToolWindow();
         char focus_window[128];
 
-        if(ImGui::IsKeyPressed(ImGuiKey_Tab)){
+        //simple keyboard controls
+        if(ImGui::IsKeyPressed(ImGuiKey_Tab) && !io.KeyShift){
             cur_mod+=1;
 
             if(cur_mod>8){
                 cur_mod=0;
             }
-
-
             snprintf(focus_window, 128, "mod %d", cur_mod);
-            //ImGui::SetKeyboardFocusHere(cur_mod);
             ImGui::SetWindowFocus((const char*)focus_window);
-
-            //ImGui::SetFocusID(ImGui::GetID("##Input"), ImGui::GetCurrentWindow()); 
-            //bool ImGui::IsWindowFocused(ImGuiFocusedFlags flags)
-            
-            //ImGui::NavUpdate();
-
-            //if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow)){
-            // /ImGui::SetKeyboardFocusHere(1);
-            //ImGui::ActivateItem(ImGui::GetID("##Input"));
-            //}
-            //ImGui::SetActiveID(ImGui::GetID("##Input"), ImGui::GetCurrentWindow());
-
-            //ImGui::SetItemDefaultFocus();
-            //ImGui::FocusItem();i
-            //snprintf(focus_window, 128, "mod %d ##Input", cur_mod);
-            //ImGui::ActivateItem(ImGui::GetID(focus_window));
-
-            //if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow)){
-                //ImGui::SetKeyboardFocusHere(ImGui::GetID(focus_window));
-            //}
-           
-
-            //ImGui::SetKeyboardFocusHere();
-            //SetItemDefaultFocus()
-
-            //ImGui::SetKeyboardFocusHere();
-            
-            // Demonstrate keeping focus on the input box
-            //ImGui::SetKeyboardFocusHere(cur_mod); // Auto focus previous widget
         }
-
+        if(ImGui::IsKeyPressed(ImGuiKey_Tab) && io.KeyShift){
+            cur_mod-=1;
+            if(cur_mod<0){
+                cur_mod=8;
+            }
+            snprintf(focus_window, 128, "mod %d", cur_mod);
+            ImGui::SetWindowFocus((const char*)focus_window);
+        }
 
         /*
         if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)){
@@ -318,7 +276,8 @@ int main(int, char**)
         }
         */
 
- 
+
+
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
