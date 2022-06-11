@@ -183,12 +183,12 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_DisplayMode DM;
-    SDL_GetCurrentDisplayMode(0, &DM);
-    auto swidth = DM.w;
-    auto sheight = DM.h;
+    //SDL_DisplayMode DM;
+    //SDL_GetCurrentDisplayMode(0, &DM);
+    //auto swidth = DM.w;
+    //auto sheight = DM.h;
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS |  SDL_WINDOW_INPUT_GRABBED );
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL |  SDL_WINDOW_BORDERLESS |  SDL_WINDOW_INPUT_GRABBED );
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_Window* window = SDL_CreateWindow("bytebeat cv", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     
@@ -218,6 +218,11 @@ int main(int, char**)
     int cur_mod=0;
     
     // Main loop
+
+
+
+    
+
     bool done = false;
 
     while (!done)
@@ -295,18 +300,13 @@ int main(int, char**)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
         
-        //map test
-        //double s = map(sin(counter),-1,1,0,100);
-        //uint32_t ss = int_map(sin(counter),-1,1,0,100);
-        //counter+=.1;
-        //printf("%f %d \n", s, ss);
     }
 
     // Cleanup
     mraa_spi_stop(spi);
     mraa_deinit();
 
-    
+
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();

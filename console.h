@@ -164,7 +164,7 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
         uint8_t res = (uint8_t)calc((char*)result);
         strcpy(ResultBuf,result);
-        snprintf(ResultValue,256,"%d",(res));
+        //snprintf(ResultValue,256,"%d",(res));
         //printf("pin->%d time %d \n",*pin,t);
         //int flop = ((t*t)/(t^t>>8))&t;
         //write_pin(spi,*pin,256*flop);
@@ -178,8 +178,8 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         //if(*pin == 0){
             //printf("dac output voltage >> %d | float voltage %f \n", dac_voltage, voltage);    
         //}
-        snprintf(ResultValue,256,"src->%d | fit->%f | voltage-> %d",res,voltage, dac_voltage);
-        
+        //snprintf(ResultValue,256,"src->%d | fit->%f | voltage-> %d",res,voltage, dac_voltage);
+        snprintf(ResultValue,256,"%6.2fv",voltage);
         write_pin(spi,*pin,(int)(dac_voltage));
 
         IDX+=1;
@@ -311,7 +311,7 @@ struct ExampleAppConsole
             
             ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0.05));
 
-            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar))
+            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar| ImGuiWindowFlags_NoScrollbar))
             {
                 ImGui::End();
                 return;
@@ -321,7 +321,7 @@ struct ExampleAppConsole
             
         }
         else{
-            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing |ImGuiWindowFlags_NoTitleBar ))
+            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing |ImGuiWindowFlags_NoTitleBar |ImGuiWindowFlags_NoScrollbar ))
             {
                 ImGui::End();
                 return;
@@ -348,11 +348,11 @@ struct ExampleAppConsole
         if(!Focused){
             ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
                 //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
-            ImGui::Dummy(ImVec2(0.0f, wsize.y/9));
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/3));
-            ImGui::Dummy(ImVec2(0.0f, wsize.y/16));
+            ImGui::Dummy(ImVec2(0.0f, 14.0f));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2.5));
+            ImGui::Dummy(ImVec2(0.0f, 0.0f));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,wsize.y/3));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,wsize.y/2.5));
             ImGui::PopStyleColor();
 
             ImGui::EndChild();
@@ -360,15 +360,14 @@ struct ExampleAppConsole
         }
 
         if(Focused){
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
-            //colors[ImGuiCol_PlotLines]              = ImVec4(0.78f, 0.00f, 0.52f, 1.00f);
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,70));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,100));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(wsize.x,70));
             ImGui::PopStyleColor();
 
             // Reserve enough left-over height for 1 separator + 1 input text
             const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*3), false, ImGuiWindowFlags_NoScrollbar);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*2.1), false, ImGuiWindowFlags_NoScrollbar);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 
             for (int i = 0; i < Items.Size; i++)
@@ -428,8 +427,8 @@ struct ExampleAppConsole
                 ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
             ImGui::Text("Expanded: %s", ResultBuf); 
-            ImGui::Text("Value: %s", ResultValue);
-            ImGui::Text("Time: %llu",CurrentFrame); 
+            ImGui::Text("Value: %s | Time: %llu", ResultValue, CurrentFrame);
+            //ImGui::Text("Time: %llu",CurrentFrame); 
         }
         ImGui::End();
 
