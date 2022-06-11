@@ -8,8 +8,13 @@
     #include "pthread.h"
 #endif
 
+#include "SDL_mixer.h"
+
 //global spi context
 extern mraa_spi_context spi;
+extern int current_channel;
+extern Mix_Chunk* _sample[5];
+extern bool reset;
 
 //double fit range
 double flt_map(double x, double in_min, double in_max, double out_min, double out_max)
@@ -138,15 +143,30 @@ void task(int t){
     //clock_nanosleep seems to ot work the same on windows/mingwin so just using std
     void sleep_us(int microseconds)
     {
-
-            
-            std::chrono::microseconds dura( microseconds ); 
-            std::this_thread::sleep_for(dura);
+        
+            //std::chrono::microseconds dura( microseconds ); 
+            //std::this_thread::sleep_for(dura);
+        bool sleep = true;
+        auto start = std::chrono::steady_clock::now();
+        while(sleep)
+        {
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
+            if ( elapsed.count() > microseconds )
+                sleep = false;
+        }
     }
 
 #endif
 
 
+void trigger_sample(int idx){
+    Mix_PlayChannel(current_channel, _sample[idx], 0);
+    current_channel+=1;
+    if(current_channel>31){
+        current_channel=0;
+    }
+}
 
 void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
@@ -179,7 +199,16 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
             //printf("dac output voltage >> %d | float voltage %f \n", dac_voltage, voltage);    
         //}
         //snprintf(ResultValue,256,"src->%d | fit->%f | voltage-> %d",res,voltage, dac_voltage);
+
+
         snprintf(ResultValue,256,"%6.2fv",voltage);
+
+        #if AUDIO == AUDIO_ON
+            if(voltage>5 && *pin<4){
+                trigger_sample(*pin);
+            }
+        #endif
+        
         write_pin(spi,*pin,(int)(dac_voltage));
 
         IDX+=1;
@@ -401,7 +430,6 @@ struct ExampleAppConsole
             // Command-line
             bool reclaim_focus = false;
             ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-
             char focus_widget[128];
             snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
 
@@ -470,6 +498,7 @@ struct ExampleAppConsole
         else if (stristr4(command_line, "RESET") != NULL)
         {
             CurrentFrame=0;
+            reset = true;
             AddLog("! reset frame counter to zero");
         }
         else if (stristr4(command_line, "TIME") != NULL)

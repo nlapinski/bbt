@@ -9,7 +9,13 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#define AUDIO_ON 1
+#define AUDIO_OFF 0
+#define AUDIO AUDIO_OFF
+
 #include <sys/time.h>
+
+
 
 //so we can build on mingw+linux
 #ifdef __linux__ 
@@ -39,6 +45,9 @@
 #include "calculator.h"
 #include "console.h"
 #include "theme.h"
+#include "SDL_mixer.h"
+
+
 /* SPI declaration */
 #define SPI_BUS 0
 /* SPI frequency in Hz */
@@ -51,8 +60,28 @@
 //global spi context
 mraa_spi_context spi;
 
+bool reset = true;
+
 //////////////////////////////////////////////////////////////////////////////////////////
+//audio globals
+int current_channel = 0;
+
 //////////////////////////////////////////////////////////////////////////////////////////
+#define NUM_WAVEFORMS 5
+
+    
+const char* _waveFileNames[] =
+{
+"kit/kick.wav",
+"kit/clap.wav",
+"kit/open_hat.wav",
+"kit/closed_hat.wav",
+"kit/snare.wav",
+};
+
+Mix_Chunk* _sample[5];
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +102,7 @@ void init_dac(){
 
 }
 
-static void ShowExampleAppConsole(bool* p_open)
+static void ShowExampleAppConsole(bool* p_open, bool* reset)
 {
     static ExampleAppConsole console1;
     static ExampleAppConsole console2;
@@ -83,7 +112,7 @@ static void ShowExampleAppConsole(bool* p_open)
     static ExampleAppConsole console6;
     static ExampleAppConsole console7;
     static ExampleAppConsole console8;
-    //ImGui::Begin("Navigator");
+
     console1.Draw("mod 1", p_open,0,0,0);
     console2.Draw("mod 2", p_open,1,0,1);
     console3.Draw("mod 3", p_open,2,0,2);
@@ -92,12 +121,42 @@ static void ShowExampleAppConsole(bool* p_open)
     console6.Draw("mod 6", p_open,1,1,5);
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
-    //ImGui::End();
+
+    if(*reset){
+        console1.CurrentFrame=0;
+        console2.CurrentFrame=0;
+        console3.CurrentFrame=0;
+        console4.CurrentFrame=0;
+        console5.CurrentFrame=0;
+        console6.CurrentFrame=0;
+        console7.CurrentFrame=0;
+        console8.CurrentFrame=0;
+        *reset = false;
+    }
 }
 
 void textbox(){
     static char name[128] = ""; 
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
+}
+
+void init_audio(){
+    memset(_sample, 0, sizeof(Mix_Chunk*) * 5);
+
+    // Set up the audio stream
+    Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
+    //SDL_PauseAudioDevice(deviceId, 0);
+    Mix_AllocateChannels(32);
+
+    // Load waveforms
+    for( int i = 0; i < NUM_WAVEFORMS; i++ )
+    {
+        _sample[i] = Mix_LoadWAV(_waveFileNames[i]);
+        if( _sample[i] == NULL )
+        {
+            fprintf(stderr, "Unable to load wave file: %s\n", _waveFileNames[i]);
+        }
+    }
 }
 
 // Main code
@@ -144,13 +203,21 @@ int main(int, char**)
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        return -1;
-    }
-
-
+    #if AUDIO == AUDIO_ON
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0)
+        {
+            printf("Error: %s\n", SDL_GetError());
+            return -1;
+        }
+    #endif
+        
+    #if AUDIO == AUDIO_OFF
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+        {
+            printf("Error: %s\n", SDL_GetError());
+            return -1;
+        }
+    #endif
 
 
     // Decide GL+GLSL versions
@@ -217,13 +284,17 @@ int main(int, char**)
 
     int cur_mod=0;
     
+
     // Main loop
-
-
+    #if AUDIO == AUDIO_ON
+        init_audio();    
+    #endif
 
     
 
     bool done = false;
+    
+
 
     while (!done)
     {
@@ -251,7 +322,7 @@ int main(int, char**)
         ImGui::NewFrame();
         bool console1=true;
         //ImGui::ShowDemoWindow();
-        ShowExampleAppConsole(&console1);
+        ShowExampleAppConsole(&console1,&reset);
 
         //debug 
         //ImGui::ShowStackToolWindow();
@@ -277,18 +348,23 @@ int main(int, char**)
         }
 
         /*
+
         if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)){
-            current_x+=1;
-            if((current_x)>4){
-                current_x=1;
-                current_y+=1;                    
+            //SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+            
+            Mix_PlayChannel(current_channel, _sample[0], 0);
+            current_channel+=1;
+            if(current_channel>4){
+                current_channel=0;
             }
-            if(current_y>2){
-                current_y=1;
-                current_x=1;
+        }
+        if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)){
+            //SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+            Mix_PlayChannel(current_channel, _sample[1], 0);
+            current_channel+=1;
+            if(current_channel>4){
+                current_channel=0;
             }
-            snprintf(focus_window, 128, "mod %d", (current_x),current_y);
-            ImGui::SetWindowFocus((const char*)focus_window);
         }
         */
 
@@ -306,7 +382,11 @@ int main(int, char**)
     mraa_spi_stop(spi);
     mraa_deinit();
 
+    #if AUDIO == AUDIO_ON
+        Mix_CloseAudio();
+    #endif
 
+    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
