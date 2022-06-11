@@ -45,7 +45,10 @@
 #include "calculator.h"
 #include "console.h"
 #include "theme.h"
-#include "SDL_mixer.h"
+
+#if AUDIO == AUDIO_ON
+    #include "SDL_mixer.h"
+#endif
 
 
 /* SPI declaration */
@@ -70,18 +73,18 @@ int current_channel = 0;
 //////////////////////////////////////////////////////////////////////////////////////////
 #define NUM_WAVEFORMS 5
 
-    
-const char* _waveFileNames[] =
-{
-"kit/kick.wav",
-"kit/clap.wav",
-"kit/open_hat.wav",
-"kit/closed_hat.wav",
-"kit/snare.wav",
-};
+#if AUDIO == AUDIO_ON
+    const char* _waveFileNames[] =
+    {
+    "kit/kick.wav",
+    "kit/clap.wav",
+    "kit/open_hat.wav",
+    "kit/closed_hat.wav",
+    "kit/snare.wav",
+    };
 
-Mix_Chunk* _sample[5];
-
+    Mix_Chunk* _sample[5];
+#endif
 
 
 
@@ -205,7 +208,7 @@ int main(int, char**)
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
     #if AUDIO == AUDIO_ON
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
         {
             printf("Error: %s\n", SDL_GetError());
             return -1;
@@ -213,7 +216,7 @@ int main(int, char**)
     #endif
         
     #if AUDIO == AUDIO_OFF
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
         {
             printf("Error: %s\n", SDL_GetError());
             return -1;

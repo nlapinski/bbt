@@ -45,7 +45,7 @@ LIBS =
 ifeq ($(UNAME_S), Linux) #LINUX
 	
 	ECHO_MESSAGE = "Linux"
-	LIBS += $(LINUX_GL_LIBS) -ldl `sdl2-config --libs` -lmraa -lpthread -lSDL2_mixer
+	LIBS += $(LINUX_GL_LIBS) -ldl `sdl2-config --libs` -lmraa -lpthread
 	CXXFLAGS += `sdl2-config --cflags`
 	CXXFLAGS += -DTAO_PEGTL_STD_EXPERIMENTAL_FILESYSTEM=0
 	CFLAGS = $(CXXFLAGS)
@@ -53,9 +53,8 @@ endif
 
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
-	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs` -lSDL2_mixe
+	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs` -lSDL2_mixer
 	LIBS += -L/usr/local/lib -L/opt/local/lib
-
 	CXXFLAGS += `sdl2-config --cflags`
 	CXXFLAGS += -I/usr/local/include -I/opt/local/include
 	CFLAGS = $(CXXFLAGS)
