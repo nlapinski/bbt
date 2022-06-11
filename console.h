@@ -172,6 +172,7 @@ struct ExampleAppConsole
     int                   TimeMs;
     char                  Cmd[256];
     int                   Pin;
+    int                   Focused;
 
     ExampleAppConsole()
     {
@@ -239,20 +240,44 @@ struct ExampleAppConsole
         ImVec2 new_p = ImVec2(ox,oy);                
         ImGui::SetNextWindowPos(new_p);
 
-        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar ))
-        {
-            ImGui::End();
-            return;
+        if(!Focused){
+            
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0.05));
+
+            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar))
+            {
+                ImGui::End();
+                return;
+            }
+
+            ImGui::PopStyleColor();
+            
         }
+        else{
+            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing |ImGuiWindowFlags_NoTitleBar ))
+            {
+                ImGui::End();
+                return;
+            }            
+        }
+
+
+        //ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow()); // needs imgui_internal.h
+
         ImVec2 wsize = ImGui::GetWindowSize();
+
+
         //manage expression replacement with time 
         ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,100));
 
         // Reserve enough left-over height for 1 separator + 1 input text
         const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-        ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*3), false, ImGuiWindowFlags_HorizontalScrollbar);
-
+        //ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*3), false, ImGuiWindowFlags_NoScrollbar);
+        //ImGuiItemFlags_NoNavDefaultFocus
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+        //ImGui::PushAllowKeyboardFocus(false);
+
 
 
         for (int i = 0; i < Items.Size; i++)
@@ -281,14 +306,22 @@ struct ExampleAppConsole
         ScrollToBottom = false;
 
         ImGui::PopStyleVar();
+        //ImGui::PopItemFlag();
+        //ImGui::PopAllowKeyboardFocus();
         ImGui::EndChild();
         ImGui::Separator();
 
         // Command-line
         bool reclaim_focus = false;
         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        if (ImGui::InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
+
+        char focus_widget[128];
+        snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
+
+        if (ImGui::InputText("##Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
         {
+            //ImGui::ActivateItem(ImGui::GetID("##Input"));
+            //ImGui::SetKeyboardFocusHere();
             char* s = InputBuf;
             Strtrim(s);
             if (s[0])
@@ -296,15 +329,26 @@ struct ExampleAppConsole
             strcpy(s, "");
             reclaim_focus = true;
         }
-
         // Auto-focus on window apparition
-        ImGui::SetItemDefaultFocus();
+        //ImGui::SetItemDefaultFocus();
+        if(ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)){
+            ImGui::SetKeyboardFocusHere(-1);    
+            Focused=1;
+        }
+        else{
+            Focused=0;
+        }
+        // Demonstrate keeping auto focus on the input box
+        
+        //ImGui::SetKeyboardFocusHere(0); // Auto focus previous widget
+
         if (reclaim_focus)
             ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
         
         ImGui::Text("Expanded: %s", ResultBuf); 
         ImGui::Text("Value: %s", ResultValue);
-	ImGui::Text("Time: %llu",CurrentFrame);	
+        ImGui::Text("Time: %llu",CurrentFrame);	
+
 
         ImGui::End();
     }
@@ -389,6 +433,7 @@ struct ExampleAppConsole
         case ImGuiInputTextFlags_CallbackCompletion:
             {
                 // Example of TEXT COMPLETION
+                return 0;
 
                 // Locate beginning of current word
                 const char* word_end = data->Buf + data->CursorPos;

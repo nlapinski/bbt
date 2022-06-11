@@ -2,10 +2,10 @@
 // (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
-
+#include <sys/time.h>
 #ifdef __linux__ 
 
-    #include <sys/time.h>
+    
     #include <sys/resource.h>
 #endif
 #ifdef __MINGW32__
@@ -15,6 +15,7 @@
 
 
 #include "imgui.h"
+
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
@@ -44,7 +45,6 @@
 
 
 
-
 //global spi context
 mraa_spi_context spi;
 
@@ -62,7 +62,6 @@ void init_dac(){
 
 }
 
-
 static void ShowExampleAppConsole(bool* p_open)
 {
     static ExampleAppConsole console1;
@@ -73,6 +72,7 @@ static void ShowExampleAppConsole(bool* p_open)
     static ExampleAppConsole console6;
     static ExampleAppConsole console7;
     static ExampleAppConsole console8;
+    //ImGui::Begin("Navigator");
     console1.Draw("mod 1", p_open,0,0,0);
     console2.Draw("mod 2", p_open,1,0,1);
     console3.Draw("mod 3", p_open,2,0,2);
@@ -81,6 +81,7 @@ static void ShowExampleAppConsole(bool* p_open)
     console6.Draw("mod 6", p_open,1,1,5);
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
+    //ImGui::End();
 }
 
 void textbox(){
@@ -175,9 +176,16 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode(0, &DM);
+    auto swidth = DM.w;
+    auto sheight = DM.h;
+
+    
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_FULLSCREEN_DESKTOP);
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, swidth, sheight, window_flags);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -187,7 +195,9 @@ int main(int, char**)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |=  ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;     // Enable Keyboard Controls
+    //io.ImGuiConfigFlags_NavEnableKeyboard = false;
+    //io.ConfigViewportsNoDefaultParent = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -196,11 +206,17 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
 
     int cur_mod=0;
     // Main loop
     bool done = false;
+
+    ImGuiContext& g = *GImGui;
+    //ImGuiIO& io = ImGui::GetIO();
+    
+    g.NavDisableHighlight = false;
+
     while (!done)
     {
         //printf("%f \n",ImGui::GetIO().Framerate);
@@ -213,8 +229,6 @@ int main(int, char**)
 
         if(ImGui::IsKeyPressed(ImGuiKey_Escape))
             done = true;    
-
-
 
         while (SDL_PollEvent(&event))
         {
@@ -239,9 +253,10 @@ int main(int, char**)
         //ImGui::Text("MS write perf count %d KHZ", perf_count*100);
         //ImGui::PopStyleColor();
         //ImGui::End();
+
         ShowExampleAppConsole(&console1);
 
-
+        //ImGui::ShowStackToolWindow();
         char focus_window[128];
 
         if(ImGui::IsKeyPressed(ImGuiKey_Tab)){
@@ -251,9 +266,42 @@ int main(int, char**)
                 cur_mod=0;
             }
 
+
             snprintf(focus_window, 128, "mod %d", cur_mod);
+            //ImGui::SetKeyboardFocusHere(cur_mod);
             ImGui::SetWindowFocus((const char*)focus_window);
+
+            //ImGui::SetFocusID(ImGui::GetID("##Input"), ImGui::GetCurrentWindow()); 
+            //bool ImGui::IsWindowFocused(ImGuiFocusedFlags flags)
+            
+            //ImGui::NavUpdate();
+
+            //if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow)){
+            // /ImGui::SetKeyboardFocusHere(1);
+            //ImGui::ActivateItem(ImGui::GetID("##Input"));
+            //}
+            //ImGui::SetActiveID(ImGui::GetID("##Input"), ImGui::GetCurrentWindow());
+
+            //ImGui::SetItemDefaultFocus();
+            //ImGui::FocusItem();i
+            //snprintf(focus_window, 128, "mod %d ##Input", cur_mod);
+            //ImGui::ActivateItem(ImGui::GetID(focus_window));
+
+            //if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow)){
+                //ImGui::SetKeyboardFocusHere(ImGui::GetID(focus_window));
+            //}
+           
+
+            //ImGui::SetKeyboardFocusHere();
+            //SetItemDefaultFocus()
+
+            //ImGui::SetKeyboardFocusHere();
+            
+            // Demonstrate keeping focus on the input box
+            //ImGui::SetKeyboardFocusHere(cur_mod); // Auto focus previous widget
         }
+
+
         /*
         if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)){
             current_x+=1;
