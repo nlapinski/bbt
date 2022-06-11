@@ -274,7 +274,8 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |=  ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;     // Enable Keyboard Controls
-
+    io.IniFilename = NULL;
+    
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     imtheme();
@@ -285,9 +286,10 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
     
-    ImGuiContext& g = *GImGui;    
-    g.NavDisableHighlight = false;
-
+    //ImGuiContext& g = *GImGui;    
+    //g.NavDisableHighlight = false;
+    //disable ini
+    
     int cur_mod=0;
     
 
