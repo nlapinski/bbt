@@ -2,6 +2,10 @@ use bytebeat expressions to drive a CV interaface
 
 ![image](https://user-images.githubusercontent.com/4634469/172029579-6000f5a3-b21f-47c0-9aba-77f57c4522aa.png)
 
+new theme:
+![image](https://user-images.githubusercontent.com/4634469/173176123-17a10d9e-e2c1-4646-b84d-96cc9e0c33fe.png)
+
+
 # How to Build
 
 
