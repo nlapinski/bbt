@@ -96,6 +96,7 @@ void spi_manager(){
         console7.spi_update(results);    
         console8.spi_update(results);
         //printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
+        
     }
     
 }

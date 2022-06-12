@@ -17,9 +17,9 @@ extern mraa_spi_context spi;
 extern bool reset;
 extern plf::nanotimer timer;
 
-char* itoa(int val, int base){
+char* mitoa(int val, int base){
     
-    static char buf[32] = {0};
+    static char buf[256] = {0};
     
     int i = 30;
     
@@ -341,9 +341,9 @@ struct ExampleAppConsole
             CurrentFrame+=1;
 
             strcpy(ResultBuf,LastCommand);
-            char time_str[256];
+            //char time_str[256];
 
-            itoa(CurrentFrame, time_str, 10);
+            char* time_str = mitoa(CurrentFrame, 10);
 
             char replace[2] = "t";
             //stringify(ResultBuf, replace, time_str);        
