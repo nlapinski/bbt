@@ -361,7 +361,7 @@ struct ExampleAppConsole
             voltage = clamp(voltage,OMin,OMax);
             uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
             snprintf(ResultValue,256,"%6.2fv",voltage);
-            //write_pin(spi,Pin,(int)(dac_voltage));
+            write_pin(spi,Pin,(int)(dac_voltage));
             IDX+=1;
             if(IDX>200){
                 IDX=0;
