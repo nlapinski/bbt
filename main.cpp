@@ -171,7 +171,7 @@ int main(int, char**)
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
+    SDL_GL_SetSwapInterval(2); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -196,17 +196,16 @@ int main(int, char**)
     //disable ini
     
     int cur_mod=0;
-    
 
     // Main loop
     bool done = false;
-    
-
+    char focus_window[128];
+    bool console1=true;    
 
     while (!done)
     {
 
-        //printf("%f \n",ImGui::GetIO().Framerate);
+        printf("%f \n",ImGui::GetIO().Framerate);
 
         SDL_Event event;
 
@@ -227,11 +226,8 @@ int main(int, char**)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-        bool console1=true;
-        //ImGui::ShowDemoWindow();
-        ShowExampleAppConsole(&console1,&reset);
 
-        char focus_window[128];
+        
         //simple keyboard controls
         if(ImGui::IsKeyPressed(ImGuiKey_Tab) && !io.KeyShift){
             cur_mod+=1;
@@ -251,9 +247,11 @@ int main(int, char**)
             ImGui::SetWindowFocus((const char*)focus_window);
         }
 
+        ShowExampleAppConsole(&console1,&reset);
         // Rendering
         ImGui::Render();
         glViewport(0, 0, 1024, 600);
+        glBlendFunc( GL_ONE,  GL_SRC1_ALPHA);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
