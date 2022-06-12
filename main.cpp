@@ -16,26 +16,23 @@
     #include <sys/resource.h>
 #endif
 
-#ifdef __MINGW32__
 
-#endif
+#include <string.h>
+#include <thread>
+#include <time.h>
+#include <chrono>
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
-#include <string.h>
-#include <thread>
-#include <time.h>
 #include <SDL.h>
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL_opengles2.h>
-#else
+
 #include <SDL_opengl.h>
-#endif
-#include <chrono>
+
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h"
+//#include "imgui_internal.h"
+
 #include "calculator.h"
 #include "console.h"
 #include "theme.h"
@@ -91,7 +88,7 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
     console6.Draw("mod 6", p_open,1,1,5);
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
-
+    /*
     if(*reset){
         console1.CurrentFrame=0;
         console2.CurrentFrame=0;
@@ -102,12 +99,7 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
         console7.CurrentFrame=0;
         console8.CurrentFrame=0;
         *reset = false;
-    }
-}
-
-void textbox(){
-    static char name[128] = ""; 
-    ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
+    }*/
 }
 
 // Main 
@@ -149,31 +141,14 @@ int main(int, char**)
         return -1;
     }
 
-    // Decide GL+GLSL versions
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-    // GL ES 2.0 + GLSL 100
-    const char* glsl_version = "#version 100";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#elif defined(__APPLE__)
-    // GL 3.2 Core + GLSL 150
-    const char* glsl_version = "#version 150";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
+
     // GL 3.0 + GLSL 130
     const char* glsl_version = "#version 130";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#endif
 
-    // Create window with graphics context
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -184,12 +159,14 @@ int main(int, char**)
     //auto swidth = DM.w;
     //auto sheight = DM.h;
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |  SDL_WINDOW_BORDERLESS );
-    //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
+    //SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE );
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
+
+
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -208,16 +185,14 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
     
-    ImGuiContext& g = *GImGui;    
-    g.NavDisableHighlight = false;
+    ///ImGuiContext& g = *GImGui;    
+    //g.NavDisableHighlight = false;
     //disable ini
     
     int cur_mod=0;
     
 
     // Main loop
-
-
     bool done = false;
     
 
@@ -250,10 +225,7 @@ int main(int, char**)
         //ImGui::ShowDemoWindow();
         ShowExampleAppConsole(&console1,&reset);
 
-        //debug 
-        //ImGui::ShowStackToolWindow();
         char focus_window[128];
-
         //simple keyboard controls
         if(ImGui::IsKeyPressed(ImGuiKey_Tab) && !io.KeyShift){
             cur_mod+=1;
@@ -273,30 +245,9 @@ int main(int, char**)
             ImGui::SetWindowFocus((const char*)focus_window);
         }
 
-        /*
-
-        if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)){
-            //SDL_QueueAudio(deviceId, wavBuffer, wavLength);
-            
-            Mix_PlayChannel(current_channel, _sample[0], 0);
-            current_channel+=1;
-            if(current_channel>4){
-                current_channel=0;
-            }
-        }
-        if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)){
-            //SDL_QueueAudio(deviceId, wavBuffer, wavLength);
-            Mix_PlayChannel(current_channel, _sample[1], 0);
-            current_channel+=1;
-            if(current_channel>4){
-                current_channel=0;
-            }
-        }
-        */
-
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, 1024, 600);
+        glViewport(0, 0, 1280, 720);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -307,7 +258,6 @@ int main(int, char**)
     // Cleanup
     mraa_spi_stop(spi);
     mraa_deinit();
-
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();

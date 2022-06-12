@@ -63,7 +63,6 @@ endif
 ifeq ($(OS), Windows_NT)
     ECHO_MESSAGE = "MinGW"
     LIBS += -lgdi32 -lopengl32 -limm32 `pkg-config --static --libs sdl2` -lpthread
-
     CXXFLAGS += `pkg-config --cflags sdl2`
     CFLAGS = $(CXXFLAGS)
 endif

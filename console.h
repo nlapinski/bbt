@@ -268,35 +268,19 @@ struct ExampleAppConsole
     void    Draw(const char* title, bool* p_open,int x , int y, int pin)
     {
         Pin = pin;                     
-        ImVec2 fraction = ImVec2(1.0/4.0,1.0/2.0);
-        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize*fraction);
-        ImVec2 new_size = ImGui::GetIO().DisplaySize*fraction;
+        ImVec2 new_size = ImVec2(256,300);
+        ImGui::SetNextWindowSize(new_size);
+        
         float ox = new_size.x * x;
         float oy = new_size.y * y;
         ImVec2 new_p = ImVec2(ox,oy);                
         ImGui::SetNextWindowPos(new_p);
 
-        if(!Focused){
-            
-            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0.05));
-
-            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar| ImGuiWindowFlags_NoScrollbar))
-            {
-                ImGui::End();
-                return;
-            }
-
-            ImGui::PopStyleColor();
-            
-        }
-        else{
-            if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing |ImGuiWindowFlags_NoTitleBar |ImGuiWindowFlags_NoScrollbar ))
-            {
-                ImGui::End();
-                return;
-            }            
-        }
-
+        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoTitleBar ))
+        {
+            ImGui::End();
+            return;
+        } 
         //////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         if(ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)){
@@ -314,20 +298,20 @@ struct ExampleAppConsole
         //ImVec2 wsize = ImGui::GetWindowSize();
 
         //manage expression replacement with time 
-        if(!Focused){
-            ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+        //if(!Focused){
+            //ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
             //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
-            ImGui::Dummy(ImVec2(0.0f, 14.0f));
-            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
-            ImGui::Dummy(ImVec2(0.0f, 0.0f));
-            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
-            ImGui::PopStyleColor();
-            ImGui::EndChild();
+            //ImGui::Dummy(ImVec2(0.0f, 14.0f));
+            //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
+            //ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            //ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            //ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
+            //ImGui::PopStyleColor();
+            //ImGui::EndChild();
 
-        }
+        //}
 
-        else{
+        if(Focused){
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,70));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,70));
