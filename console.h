@@ -173,6 +173,7 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         adc1arr[IDX] = (float)((int)res*256);
         adc2arr[IDX] = voltage;
 
+        //this breaks for soem reasons on linux? ruins how sdl ticks
         //std_sleep_us(*ms);
         posix_nano(*ms);
     }
@@ -185,7 +186,6 @@ std::vector<double> split_args(char* args){
     while(ptr != NULL)
     {
         values.push_back(strtod(ptr,NULL));
-        //printf("'%s %f'\n", ptr, values.back());
         ptr = strtok(NULL, delim);   
     }
     return values;
@@ -293,7 +293,7 @@ struct ExampleAppConsole
         ImVec2 new_p = ImVec2(ox,oy);                
         ImGui::SetNextWindowPos(new_p);
 
-        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoTitleBar ))
+        if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize  ))
         {
             ImGui::End();
             return;
@@ -315,28 +315,28 @@ struct ExampleAppConsole
         //ImVec2 wsize = ImGui::GetWindowSize();
 
         //manage expression replacement with time 
-        //if(!Focused){
-            //ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-            //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
-            //ImGui::Dummy(ImVec2(0.0f, 14.0f));
-            //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
-            //ImGui::Dummy(ImVec2(0.0f, 0.0f));
-            //ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
-            //ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
-            //ImGui::PopStyleColor();
-            //ImGui::EndChild();
+        if(!Focused){
+            
+            ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+            ImGui::Dummy(ImVec2(0.0f, 10.0f));
+            ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
+            ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
+            ImGui::PopStyleColor();
+            ImGui::EndChild();
 
-        //}
+        }
 
         if(Focused){
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,70));
-            //ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,70));
-            //ImGui::PopStyleColor();
+            ImGui::PopStyleColor();
 
             // Reserve enough left-over height for 1 separator + 1 input text
             const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*2), false, 0);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*2), false, ImGuiWindowFlags_NoScrollbar);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 
             for (int i = 0; i < Items.Size; i++)

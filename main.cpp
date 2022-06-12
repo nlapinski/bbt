@@ -88,7 +88,8 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
     console6.Draw("mod 6", p_open,1,1,5);
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
-    /*
+
+
     if(*reset){
         console1.CurrentFrame=0;
         console2.CurrentFrame=0;
@@ -99,7 +100,7 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
         console7.CurrentFrame=0;
         console8.CurrentFrame=0;
         *reset = false;
-    }*/
+    }
 }
 
 
@@ -180,6 +181,7 @@ int main(int, char**)
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     imtheme();
+
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
