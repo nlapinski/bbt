@@ -115,7 +115,7 @@ void posix_nano(int microseconds){
     clock_gettime(CLOCK_MONOTONIC, &deadline);
 
     // Add the time you want to sleep
-    deadline.tv_nsec += microseconds;
+    deadline.tv_nsec += microseconds*1000;
 
     // Normalize the time to account for the second boundary
     if(deadline.tv_nsec >= 1000000000) {
@@ -317,14 +317,14 @@ struct ExampleAppConsole
         //manage expression replacement with time 
         if(!Focused){
             
-            ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-            ImGui::Dummy(ImVec2(0.0f, 10.0f));
+            //ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+            //ImGui::Dummy(ImVec2(0.0f, 10.0f));
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
-            ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            //ImGui::Dummy(ImVec2(0.0f, 0.0f));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
             ImGui::PopStyleColor();
-            ImGui::EndChild();
+            //ImGui::EndChild();
 
         }
 
