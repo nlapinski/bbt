@@ -42,9 +42,9 @@
 #define SPI_BUS 0
 /* SPI frequency in Hz */
 //15mhz
-//#define SPI_FREQ 15000000
+#define SPI_FREQ 15000000
 //#define SPI_FREQ 10000000
-#define SPI_FREQ 50000000
+//#define SPI_FREQ 50000000
 //#define SPI_FREQ 2147773188
 
 //global spi context
