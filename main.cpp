@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
+
+#include "plf_nanotimer.h"
+
 #include <sys/time.h>
 #include <sched.h>
 
@@ -16,7 +19,6 @@
 #ifdef __linux__ 
     #include <sys/resource.h>
 #endif
-
 
 #include <string.h>
 #include <thread>
@@ -29,14 +31,11 @@
 #include <SDL.h>
 
 #include <SDL_opengl.h>
-
 #define IMGUI_DEFINE_MATH_OPERATORS
-//#include "imgui_internal.h"
 
 #include "calculator.h"
 #include "console.h"
 #include "theme.h"
-
 
 /* SPI declaration */
 #define SPI_BUS 0
@@ -52,6 +51,17 @@ mraa_spi_context spi;
 
 bool reset = true;
 
+plf::nanotimer timer;
+
+static ExampleAppConsole console1;
+static ExampleAppConsole console2;
+static ExampleAppConsole console3;
+static ExampleAppConsole console4;
+static ExampleAppConsole console5;
+static ExampleAppConsole console6;
+static ExampleAppConsole console7;
+static ExampleAppConsole console8;
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,19 +76,28 @@ void init_dac(){
         mraa_spi_write(spi,0x00);
         //sleep_us(10000);
     }
-
 }
+
+void spi_manager(){
+    double results;
+    while(true){
+        results = timer.get_elapsed_ns();
+        console1.spi_update(results);    
+        console2.spi_update(results);    
+        console3.spi_update(results);    
+        console4.spi_update(results);    
+        console5.spi_update(results);    
+        console6.spi_update(results);    
+        console7.spi_update(results);    
+        console8.spi_update(results);    
+    }
+    
+}
+
 
 static void ShowExampleAppConsole(bool* p_open, bool* reset)
 {
-    static ExampleAppConsole console1;
-    static ExampleAppConsole console2;
-    static ExampleAppConsole console3;
-    static ExampleAppConsole console4;
-    static ExampleAppConsole console5;
-    static ExampleAppConsole console6;
-    static ExampleAppConsole console7;
-    static ExampleAppConsole console8;
+
 
     console1.Draw("mod 1", p_open,0,0,0);
     console2.Draw("mod 2", p_open,1,0,1);
@@ -88,17 +107,24 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
     console6.Draw("mod 6", p_open,1,1,5);
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
-
     
     if(*reset){
-        //console1.CurrentFrame=0;
-        //console2.CurrentFrame=0;
-        //console3.CurrentFrame=0;
-        //console4.CurrentFrame=0;
-        //console5.CurrentFrame=0;
-        //console6.CurrentFrame=0;
-        //console7.CurrentFrame=0;
-        //console8.CurrentFrame=0;
+        console1.CurrentFrame=0;
+        console2.CurrentFrame=0;
+        console3.CurrentFrame=0;
+        console4.CurrentFrame=0;
+        console5.CurrentFrame=0;
+        console6.CurrentFrame=0;
+        console7.CurrentFrame=0;
+        console8.CurrentFrame=0;
+        console1.IDX=0;
+        console2.IDX=0;
+        console3.IDX=0;
+        console4.IDX=0;
+        console5.IDX=0;
+        console6.IDX=0;
+        console7.IDX=0;
+        console8.IDX=0;
         *reset = false;
     }
 }
@@ -165,7 +191,7 @@ int main(int, char**)
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(0); // Enable vsync
+    SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -192,23 +218,22 @@ int main(int, char**)
     bool console1=true;    
     glViewport(0, 0, 1024, 600);
 
+    //disable stdout buff
+    std::setvbuf(stdout, NULL, _IONBF, 0);
+    /*
+    #ifdef __linux__ 
+        //linux prioritiy
+        struct sched_param sp;
+        sp.sched_priority = 95;
+        if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+            printf("WARNING: Failed to set bbt MAIN thread to real-time priority \n");
+        }
+    #endif*/
 
-
-
-
-    struct sched_param sp;
-
-    sp.sched_priority = 95;
-
-
-
-    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
-        fprintf(stderr,"WARNING: Failed to set bbt MAIN thread"
-                "to real-time priority\n");
-    }
-    
-
-
+    timer.start();
+    std::thread           Manager;
+    Manager = std::thread(spi_manager);
+    Manager.detach();
 
     while (!done)
     {
@@ -232,7 +257,6 @@ int main(int, char**)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
         
         //simple keyboard controls
         if(ImGui::IsKeyPressed(ImGuiKey_Tab) && !io.KeyShift){
@@ -253,6 +277,7 @@ int main(int, char**)
             ImGui::SetWindowFocus((const char*)focus_window);
         }
 
+        
         ShowExampleAppConsole(&console1,&reset);
         // Rendering
         ImGui::Render();
@@ -263,7 +288,9 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
-        
+        fflush(stdout);
+
+
     }
 
     // Cleanup

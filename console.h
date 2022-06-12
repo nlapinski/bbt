@@ -10,10 +10,12 @@
 #endif
 
 #include <chrono>
+#include "plf_nanotimer.h"
 
 //global spi context
 extern mraa_spi_context spi;
 extern bool reset;
+extern plf::nanotimer timer;
 
 //double fit range
 double flt_map(double x, double in_min, double in_max, double out_min, double out_max)
@@ -110,6 +112,7 @@ char *stristr4(const char *haystack, const char *needle) {
     return NULL;
 }
 
+/*
 void posix_nano(int microseconds){
     struct timespec deadline;
     clock_gettime(CLOCK_MONOTONIC, &deadline);
@@ -139,27 +142,32 @@ void std_sleep_us(int microseconds)
             sleep = false;
     }
 }
+*/
 
 
 void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
     int IDX=0;
-    struct timespec deadline;
-
-
-    struct sched_param sp;
-    sp.sched_priority = 95;
-
-
-    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
-        fprintf(stderr,"WARNING: Failed to set bbt worker thread"
-                "to real-time priority\n");
-    }
     
+    //linux prioritiy
+    /*
+    struct sched_param sp;
+    sp.sched_priority = 90;
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+        printf("WARNING: Failed to set bbt WORKER thread to real-time priority \n");
+    }
+    */
+    
+    double results = timer.get_elapsed_ns();
+    double end = results+((double)(*ms)*1000.0);
 
     while(true){
-
-        if(!reset){
+        results = timer.get_elapsed_ns();
+    
+        if(results<end){
+            continue;
+        }
+        else{
             *CurrentFrame+=1;
             int t = (int)*CurrentFrame;
             char temp_str[256];
@@ -171,43 +179,23 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
             uint8_t res = (uint8_t)calc((char*)result);
             strcpy(ResultBuf,result);
-
             double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
             voltage = clamp(voltage,*omin,*omax);
             uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
-
             snprintf(ResultValue,256,"%6.2fv",voltage);
-
             write_pin(spi,*pin,(int)(dac_voltage));
-
             IDX+=1;
             if(IDX>200){
                 IDX=0;
             }
             adc1arr[IDX] = (float)((int)res*256);
             adc2arr[IDX] = voltage;
-
-            //this breaks for soem reasons on linux? ruins how sdl ticks
-            //std_sleep_us(*ms);
-            //posix_nano(*ms);
-            clock_gettime(CLOCK_MONOTONIC, &deadline);
-
-            // Add the time you want to sleep
-            deadline.tv_nsec += (*ms*1000);
-            // Normalize the time to account for the second boundary
-            if(deadline.tv_nsec >= 1000000000) {
-               deadline.tv_nsec -= 1000000000;
-                deadline.tv_sec++;
-            }
-            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-            
-            *ms = *next_time;  
-        }
-        else{
-            *CurrentFrame=0;
+            *ms = *next_time;
+            //timer.start();
+            results = timer.get_elapsed_ns();
+            end = results+((double)(*ms)*1000.0);
         }
     }
-
 }
 
 std::vector<double> split_args(char* args){
@@ -252,6 +240,7 @@ struct ExampleAppConsole
     int                   Focused;
     bool                  init;
     int                   NextTimeMs;
+    double                LastTime;
 
     ExampleAppConsole()
     {
@@ -273,7 +262,7 @@ struct ExampleAppConsole
         ScrollToBottom = false;
         AddLog("CV calc");
         ExecCommand("calc (t*5)%256");
-        //ExecCommand("fit 0.0 256.0 -10.0 10.0");
+        //ExecCommand("fit 0.0 256.0 -2.0 2.0");
         OMin =-10.0;
         OMax = 10.0;
         IMin =0.0;
@@ -281,8 +270,9 @@ struct ExampleAppConsole
         TimeMs = 10000;
         NextTimeMs=TimeMs;
         Focused = 0;
-        Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
-        Worker.detach();
+        IDX=0;
+        //Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
+        //Worker.detach();
         //sched_param sch;
         //int policy; 
         //pthread_getschedparam(Worker.native_handle(), &policy, &sch);
@@ -306,6 +296,36 @@ struct ExampleAppConsole
     static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)s, len); }
     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
+
+    void spi_update(double results){
+    
+        if(results>LastTime){
+            CurrentFrame+=1;
+            int t = (int)CurrentFrame;
+            char temp_str[256];
+            strcpy(temp_str,LastCommand);
+            char time_str[256];
+            snprintf(time_str,256,"%d",t);
+            char replace[2] = "t";
+            char* result;
+            result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
+            uint8_t res = (uint8_t)calc((char*)result);
+            strcpy(ResultBuf,result);
+            double voltage = flt_map((double)res,IMin,IMax,OMin,OMax);
+            voltage = clamp(voltage,OMin,OMax);
+            uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
+            snprintf(ResultValue,256,"%6.2fv",voltage);
+            write_pin(spi,Pin,(int)(dac_voltage));
+            IDX+=1;
+            if(IDX>200){
+                IDX=0;
+            }
+            adc1arr[IDX] = (float)((int)res*256);
+            adc2arr[IDX] = voltage;
+
+            LastTime = results+((double)(TimeMs)*1000.0);
+        }
+    }
 
     void    ClearLog()
     {
@@ -414,11 +434,7 @@ struct ExampleAppConsole
 
             // Command-line
             bool reclaim_focus = false;
-            ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-            //char focus_widget[128];
-            //snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
-
-            
+            ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;        
 
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0,0.9f,.9f,1.0f));
             if (ImGui::InputText("##Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
@@ -488,11 +504,12 @@ struct ExampleAppConsole
         else if (stristr4(command_line, "TIME") != NULL)
         {
             int temp  = (int)atoi(command_line+5);
-            if(temp<100){
-                temp=100;
-            }
+            //if(temp<100){
+                //temp=100;
+            //}
 
             NextTimeMs = temp;
+            TimeMs = temp;
             AddLog("! set new time constant %s", command_line+5);
         }
         else if (stristr4(command_line, "FIT") != NULL)
