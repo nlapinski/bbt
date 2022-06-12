@@ -108,54 +108,6 @@ char *stristr4(const char *haystack, const char *needle) {
     return NULL;
 }
 
-void task(int t){
-    //flop = (t>>8&t)*(t>>15&t);
-    //flop = t<<((t>>8&t)|(t>>14&t));
-    //flop = (t*(t>>5|t>>8))>>(t>>16&t);
-    int flop = ((t*t)/(t^t>>8))&t;
-    //(t>>8&t)*(t>>15&t)
-    write_pin(spi,0,256*flop);
-}
-
-#ifdef __linux__ 
-    struct timespec deadline;
-
-    void sleep_us(int microseconds)
-    {
-
-            //struct timespec deadline;
-            clock_gettime(CLOCK_MONOTONIC, &deadline);
-            //clock_gettime(CLOCK_REALTIME, &(deadline));
-            // Add the time you want to sleep
-            deadline.tv_nsec += microseconds*1000;
-            // Normalize the time to account for the second boundary
-            if(deadline.tv_nsec >= 1000000000) {
-                deadline.tv_nsec -= 1000000000;
-                deadline.tv_sec++;
-            }
-            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-    }
-#endif
-#ifdef __MINGW32__
-    //clock_nanosleep seems to ot work the same on windows/mingwin so just using std
-    void sleep_us(int microseconds)
-    {
-        
-            //std::chrono::microseconds dura( microseconds ); 
-            //std::this_thread::sleep_for(dura);
-        bool sleep = true;
-        auto start = std::chrono::steady_clock::now();
-        while(sleep)
-        {
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
-            if ( elapsed.count() > microseconds )
-                sleep = false;
-        }
-    }
-
-#endif
-
 
 void std_sleep_us(int microseconds)
 {
@@ -190,22 +142,10 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
         uint8_t res = (uint8_t)calc((char*)result);
         strcpy(ResultBuf,result);
-        //snprintf(ResultValue,256,"%d",(res));
-        //printf("pin->%d time %d \n",*pin,t);
-        //int flop = ((t*t)/(t^t>>8))&t;
-        //write_pin(spi,*pin,256*flop);
-        //double norm = flt_map((double)res,0.0,256.0,*imin,*imax);
+
         double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
         voltage = clamp(voltage,*omin,*omax);
         uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
-
-
-        //write_pin(spi,*pin,(int)((int)res*256));
-        //if(*pin == 0){
-            //printf("dac output voltage >> %d | float voltage %f \n", dac_voltage, voltage);    
-        //}
-        //snprintf(ResultValue,256,"src->%d | fit->%f | voltage-> %d",res,voltage, dac_voltage);
-
 
         snprintf(ResultValue,256,"%6.2fv",voltage);
 
@@ -387,7 +327,7 @@ struct ExampleAppConsole
 
         }
 
-        if(Focused){
+        else{
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,70));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,70));

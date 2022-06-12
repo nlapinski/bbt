@@ -110,16 +110,9 @@ void textbox(){
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
 }
 
-// Main code
+// Main 
 int main(int, char**)
-//int main( int argc, char** argv )
 {
-    /*
-    setpriority(PRIO_PROCESS, 0, -20);
-    struct sched_param param;
-    param.sched_priority = 1;
-    int canSetRealTimeThreadPriority = (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) == 0);
-    */
 
     //mraa SPI setup
     mraa_result_t status = MRAA_SUCCESS;
@@ -128,7 +121,6 @@ int main(int, char**)
         printf("MRAA init error \n");
     }
     
-
     //mraa init stuff
     spi = mraa_spi_init(SPI_BUS);
     if(status!= MRAA_SUCCESS){
@@ -150,12 +142,6 @@ int main(int, char**)
     }
 
     init_dac();
-
-    // Setup SDL
-    // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
-    // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
-
-        
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -188,9 +174,9 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
+    // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    //8 or 16? not sure which or if any faster
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     //SDL_DisplayMode DM;
@@ -198,13 +184,12 @@ int main(int, char**)
     //auto swidth = DM.w;
     //auto sheight = DM.h;
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL |  SDL_WINDOW_BORDERLESS |  SDL_WINDOW_INPUT_GRABBED );
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |  SDL_WINDOW_BORDERLESS );
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("bytebea", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
-    
+    SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    //SDL_GL_SetSwapInterval(1); // Enable vsync
+    SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -223,8 +208,8 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
     
-    //ImGuiContext& g = *GImGui;    
-    //g.NavDisableHighlight = false;
+    ImGuiContext& g = *GImGui;    
+    g.NavDisableHighlight = false;
     //disable ini
     
     int cur_mod=0;
@@ -311,7 +296,7 @@ int main(int, char**)
 
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        glViewport(0, 0, 1024, 600);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
