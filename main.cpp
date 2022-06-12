@@ -129,9 +129,12 @@ int main(int, char**)
     /* set big endian mode */
     //lt2668 is MSB LSB - this causes errors but is needed?
     status = mraa_spi_lsbmode(spi, 1);
+    
     if(status!= MRAA_SUCCESS){
             printf("SPI lsb error \n");
     }
+
+
 
     init_dac();
 
@@ -140,7 +143,6 @@ int main(int, char**)
         printf("Error: %s\n", SDL_GetError());
         return -1;
     }
-
 
     // GL 3.0 + GLSL 130
     const char* glsl_version = "#version 130";
@@ -161,7 +163,7 @@ int main(int, char**)
 
     //SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE );
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 500, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -247,7 +249,7 @@ int main(int, char**)
 
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, 1280, 720);
+        glViewport(0, 0, 800, 500);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

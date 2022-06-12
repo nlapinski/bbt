@@ -2,7 +2,7 @@
 #ifdef __linux__ 
     /* mraa header */
     #include "mraa/spi.h"
-    #include "pthread.h"
+    //#include "pthread.h"
 #endif
 #ifdef __MINGW32__
     #include "winmraa.h"
@@ -111,7 +111,7 @@ char *stristr4(const char *haystack, const char *needle) {
 
 void std_sleep_us(int microseconds)
 {
-    
+ /*   
         //std::chrono::microseconds dura( microseconds ); 
         //std::this_thread::sleep_for(dura);
     bool sleep = true;
@@ -122,7 +122,7 @@ void std_sleep_us(int microseconds)
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
         if ( elapsed.count() > microseconds )
             sleep = false;
-    }
+    }*/
 }
 
 
@@ -229,8 +229,9 @@ struct ExampleAppConsole
         IMin =0.0;
         IMax = 256.0;
         TimeMs = 10000;
-        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
-        Worker.detach();
+        Focused = 0;
+        //Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
+        //Worker.detach();
     }
     ~ExampleAppConsole()
     {
@@ -313,13 +314,13 @@ struct ExampleAppConsole
 
         if(Focused){
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,70));
-            ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
+            //ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,70));
-            ImGui::PopStyleColor();
+            //ImGui::PopStyleColor();
 
             // Reserve enough left-over height for 1 separator + 1 input text
             const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*2.1), false, ImGuiWindowFlags_NoScrollbar);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve*2), false, 0);
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 
             for (int i = 0; i < Items.Size; i++)
@@ -353,8 +354,8 @@ struct ExampleAppConsole
             // Command-line
             bool reclaim_focus = false;
             ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-            char focus_widget[128];
-            snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
+            //char focus_widget[128];
+            //snprintf(focus_widget, 128, "mod %d ##Input", (x+1)*(y+1));
 
             
 
