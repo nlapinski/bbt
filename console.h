@@ -159,7 +159,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
     */
     
     double results = timer.get_elapsed_ns();
-    double end = results+((double)(*ms)*1000.0);
+    double end = results+((double)(*ms)*1.0);
 
     while(true){
         results = timer.get_elapsed_ns();
@@ -193,7 +193,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             *ms = *next_time;
             //timer.start();
             results = timer.get_elapsed_ns();
-            end = results+((double)(*ms)*1000.0);
+            end = results+((double)(*ms)*1.0);
         }
     }
 }
@@ -267,7 +267,7 @@ struct ExampleAppConsole
         OMax = 10.0;
         IMin =0.0;
         IMax = 256.0;
-        TimeMs = 10000;
+        TimeMs = 1000;
         NextTimeMs=TimeMs;
         Focused = 0;
         IDX=0;
@@ -323,7 +323,7 @@ struct ExampleAppConsole
             adc1arr[IDX] = (float)((int)res*256);
             adc2arr[IDX] = voltage;
 
-            LastTime = results+((double)(TimeMs)*1000.0);
+            LastTime = results+((double)(TimeMs)*1.0);
         }
     }
 
