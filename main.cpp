@@ -155,16 +155,16 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     // Create window with graphics context
-    //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 1);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN);
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    //SDL_GL_SetSwapInterval(0); // Enable vsync
+    SDL_GL_SetSwapInterval(5); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -182,8 +182,8 @@ int main(int, char**)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
-        
     int cur_mod=0;
+
 
     // Main loop
     bool done = false;
@@ -192,7 +192,7 @@ int main(int, char**)
     glViewport(0, 0, 1024, 600);
 
     struct sched_param sp;
-    sp.sched_priority = 90;
+    sp.sched_priority = 0;
 
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
         fprintf(stderr,"WARNING: Failed to set bbt thread"

@@ -145,6 +145,10 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
     //int t = 0;
     int IDX=0;
     struct timespec deadline;
+
+    struct sched_param sp;
+    sp.sched_priority = 80+*pin;
+
     while(true){
 
         *CurrentFrame+=1;
