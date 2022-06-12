@@ -110,12 +110,25 @@ char *stristr4(const char *haystack, const char *needle) {
     return NULL;
 }
 
+void posix_nano(int microseconds){
+    struct timespec deadline;
+    clock_gettime(CLOCK_MONOTONIC, &deadline);
+
+    // Add the time you want to sleep
+    deadline.tv_nsec += microseconds;
+
+    // Normalize the time to account for the second boundary
+    if(deadline.tv_nsec >= 1000000000) {
+       deadline.tv_nsec -= 1000000000;
+        deadline.tv_sec++;
+    }
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
+}
+
 
 void std_sleep_us(int microseconds)
 {
- /*
-        //std::chrono::microseconds dura( microseconds ); 
-        //std::this_thread::sleep_for(dura);
+ 
     bool sleep = true;
     auto start = std::chrono::steady_clock::now();
     while(sleep)
@@ -124,7 +137,7 @@ void std_sleep_us(int microseconds)
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
         if ( elapsed.count() > microseconds )
             sleep = false;
-    }*/
+    }
 }
 
 
@@ -160,7 +173,8 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         adc1arr[IDX] = (float)((int)res*256);
         adc2arr[IDX] = voltage;
 
-        std_sleep_us(*ms);
+        //std_sleep_us(*ms);
+        posix_nano(*ms);
     }
 }
 
