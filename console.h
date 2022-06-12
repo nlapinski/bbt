@@ -54,8 +54,12 @@ uint32_t int_map(double input, double input_start, double input_end, double outp
 }
 
 
-static void write_pin(mraa_spi_context spi,int pin,int val){
-
+int write_pin(mraa_spi_context spi,int pin,int val){
+    if(pin_lock==true){
+        return 0;
+    }
+    pin_lock=true;
+    //printf("CURRENT STATE OF PIN >>>> %d \n", pin_lock);
     uint8_t low = val & 0xff;
     uint8_t high=(val>>8) & 0xff;
     //uint8_t p1= 0x30 | pin;
@@ -65,6 +69,8 @@ static void write_pin(mraa_spi_context spi,int pin,int val){
     pat[2]=high;
     pat[3]=low;
     mraa_spi_write_buf(spi, pat, 4);
+    pin_lock=false;
+    return 1;
 
 }
 
@@ -199,6 +205,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             continue;
         }
         else{
+
             *CurrentFrame+=1;
             int t = (int)*CurrentFrame;
             char temp_str[256];
@@ -215,11 +222,11 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             voltage = clamp(voltage,*omin,*omax);
             uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
             snprintf(ResultValue,256,"%6.2fv",voltage);
-            while(!pin_lock){
-                    pin_lock=true;
-                    write_pin(spi,*pin,(int)(dac_voltage));
-                    pin_lock=false;
-            }
+
+            
+            
+
+            //}
             IDX+=1;
             if(IDX>200){
                 IDX=0;
@@ -230,6 +237,11 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             //timer.start();
             results = timer.get_elapsed_ns();
             end = results+((double)(*ms)*1.0);
+
+            bool sucess = false; 
+            while(!sucess){
+                sucess = write_pin(spi,*pin,(int)(dac_voltage));
+            };
         }
     }
 }

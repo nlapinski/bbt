@@ -9,7 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-
 #include "plf_nanotimer.h"
 
 #include <sys/time.h>
@@ -44,12 +43,15 @@
 //15mhz
 //#define SPI_FREQ 15000000
 //#define SPI_FREQ 10000000
+
 #define SPI_FREQ 50000000
 //#define SPI_FREQ 2147773188
 
 //global spi context
 mraa_spi_context spi;
 bool pin_lock =false;
+bool draw_lock = false;
+
 bool reset = true;
 
 plf::nanotimer timer;
