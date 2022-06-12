@@ -50,6 +50,8 @@
 //global spi context
 mraa_spi_context spi;
 
+struct timespec deadline;
+
 bool reset = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +166,7 @@ int main(int, char**)
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(2); // Enable vsync
+    SDL_GL_SetSwapInterval(0); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
