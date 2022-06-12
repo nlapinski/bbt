@@ -200,8 +200,6 @@ int main(int, char**)
             printf("SPI lsb error \n");
     }
 
-
-
     init_dac();
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
