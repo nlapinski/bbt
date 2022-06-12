@@ -79,11 +79,13 @@ void init_dac(){
 
 void spi_manager(){
     double results;
+    /*
     struct sched_param sp;
     sp.sched_priority = 95;
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
         printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
     }
+    */
 
     while(true){
         results = timer.get_elapsed_ns();
@@ -95,8 +97,8 @@ void spi_manager(){
         console6.spi_update(results);    
         console7.spi_update(results);    
         console8.spi_update(results);
-        //printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
-        
+        printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
+
     }
     
 }
