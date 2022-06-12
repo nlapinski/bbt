@@ -77,7 +77,7 @@ void init_dac(){
     }
 }
 
-void spi_manager(){
+void spi_manager_A(){
     double results;
     /*
     struct sched_param sp;
@@ -93,11 +93,37 @@ void spi_manager(){
         console2.spi_update(results);    
         console3.spi_update(results);    
         console4.spi_update(results);    
+        //console5.spi_update(results);    
+        //console6.spi_update(results);    
+        //console7.spi_update(results);    
+        //console8.spi_update(results);
+        //printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
+
+    }
+    
+}
+
+void spi_manager_B(){
+    double results;
+    /*
+    struct sched_param sp;
+    sp.sched_priority = 95;
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+        printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
+    }
+    */
+
+    while(true){
+        results = timer.get_elapsed_ns();
+        //console1.spi_update(results);
+        //console2.spi_update(results);    
+        //console3.spi_update(results);    
+        //console4.spi_update(results);    
         console5.spi_update(results);    
         console6.spi_update(results);    
         console7.spi_update(results);    
         console8.spi_update(results);
-        printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
+        //printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
 
     }
     
@@ -241,9 +267,13 @@ int main(int, char**)
     #endif*/
 
     timer.start();
-    std::thread           Manager;
-    Manager = std::thread(spi_manager);
-    Manager.detach();
+    std::thread           ManagerA;
+    ManagerA = std::thread(spi_manager_A);
+    ManagerA.detach();
+
+    std::thread           ManagerB;
+    ManagerB = std::thread(spi_manager_B);
+    ManagerB.detach();
 
     while (!done)
     {
