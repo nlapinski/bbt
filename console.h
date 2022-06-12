@@ -146,8 +146,16 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
     int IDX=0;
     struct timespec deadline;
 
+
     struct sched_param sp;
-    sp.sched_priority = 80+*pin;
+    sp.sched_priority = 95;
+
+
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+        fprintf(stderr,"WARNING: Failed to set bbt worker thread"
+                "to real-time priority\n");
+    }
+    
 
     while(true){
 
@@ -185,7 +193,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             clock_gettime(CLOCK_MONOTONIC, &deadline);
 
             // Add the time you want to sleep
-            deadline.tv_nsec += *ms*1000;
+            deadline.tv_nsec += (*ms*1000);
             // Normalize the time to account for the second boundary
             if(deadline.tv_nsec >= 1000000000) {
                deadline.tv_nsec -= 1000000000;
@@ -193,7 +201,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             }
             clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
             
-            *ms = *next_time;            
+            *ms = *next_time;  
         }
         else{
             *CurrentFrame=0;
@@ -275,6 +283,16 @@ struct ExampleAppConsole
         Focused = 0;
         Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
         Worker.detach();
+        //sched_param sch;
+        //int policy; 
+        //pthread_getschedparam(Worker.native_handle(), &policy, &sch);
+        //sch.sched_priority = 0;
+        //if (pthread_setschedparam(Worker.native_handle(), SCHED_FIFO, &sch)) {
+         //   fprintf(stderr,"WARNING: Failed to set worker bbt thread"
+         //   "to real-time priority\n");
+        //  }
+
+        
     }
     ~ExampleAppConsole()
     {
@@ -469,8 +487,12 @@ struct ExampleAppConsole
         }
         else if (stristr4(command_line, "TIME") != NULL)
         {
-            
-            NextTimeMs = (int)atoi(command_line+5);
+            int temp  = (int)atoi(command_line+5);
+            if(temp<100){
+                temp=100;
+            }
+
+            NextTimeMs = temp;
             AddLog("! set new time constant %s", command_line+5);
         }
         else if (stristr4(command_line, "FIT") != NULL)

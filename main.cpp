@@ -191,13 +191,22 @@ int main(int, char**)
     bool console1=true;    
     glViewport(0, 0, 1024, 600);
 
+
+
+
+
     struct sched_param sp;
-    sp.sched_priority = 0;
+
+    sp.sched_priority = 95;
+
+
 
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
-        fprintf(stderr,"WARNING: Failed to set bbt thread"
-            "to real-time priority\n");
+        fprintf(stderr,"WARNING: Failed to set bbt MAIN thread"
+                "to real-time priority\n");
     }
+    
+
 
 
     while (!done)
