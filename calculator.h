@@ -143,7 +143,6 @@ namespace calculator
       {
          // By default we initialise with all binary operators from the C language that can be
          // used on integers, all with their usual priority.
-
          insert( "*", order( 5 ), []( const long l, const long r ) { return l * r; } );
          insert( "/", order( 5 ), []( const long l, const long r ) { return l / r; } );
          insert( "%", order( 5 ), []( const long l, const long r ) { return l % r; } );
@@ -162,6 +161,7 @@ namespace calculator
          insert( "|", order( 12 ), []( const long l, const long r ) { return l | r; } );
          insert( "&&", order( 13 ), []( const long l, const long r ) { return ( ( l != 0 ) && ( r != 0 ) ) ? 1 : 0; } );
          insert( "||", order( 14 ), []( const long l, const long r ) { return ( ( l != 0 ) || ( r != 0 ) ) ? 1 : 0; } );
+
       }
 
       // Arbitrary user-defined operators can be added at runtime.
@@ -336,31 +336,13 @@ namespace calculator
 
 long long calc( char* argv )  // NOLINT(bugprone-exception-escape)
 {
-   // Check the grammar for some possible issues.
+
    long long ret = 0;
-
-   if( pegtl::analyze< calculator::grammar >() != 0 ) {
-      //std::cerr << "parse error" << std::endl;
-      return 1;
-   }
-
-   // The objects required as state by the actions.
    calculator::stacks s;
    calculator::operators b;
-
-   // Parse and process the command-line arguments as calculator expressions...
-   //pegtl::argv_input in( argv, i );
    pegtl::memory_input in( argv, "input" );
-
-   if( pegtl::parse< calculator::grammar, calculator::action >( in, b, s ) ) {
-      // ...and print the respective results to std::cout.
-      //std::cout << "result: " << s.finish() << std::endl;
-      ret = (long long)s.finish();
-      return ret;
-   }
-   //else {
-   //   std::cerr << "parse error for: " << argv << std::endl;
-   //}
-
-   return 0;
+   pegtl::parse< calculator::grammar, calculator::action >( in, b, s );
+   ret = (long long)s.finish();
+   return ret;
+   
 }

@@ -68,29 +68,34 @@ static ExampleAppConsole console8;
 
 void init_dac(){
 
-    //sleep_us(10000);
     //zero out dacs
     for(int i=0;i<16;i++){
         mraa_spi_write(spi,0x00);
         mraa_spi_write(spi,0x30+i);
         mraa_spi_write(spi,0x00);
         mraa_spi_write(spi,0x00);
-        //sleep_us(10000);
     }
 }
 
 void spi_manager(){
     double results;
+    struct sched_param sp;
+    sp.sched_priority = 95;
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+        printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
+    }
+
     while(true){
         results = timer.get_elapsed_ns();
-        console1.spi_update(results);    
+        console1.spi_update(results);
         console2.spi_update(results);    
         console3.spi_update(results);    
         console4.spi_update(results);    
         console5.spi_update(results);    
         console6.spi_update(results);    
         console7.spi_update(results);    
-        console8.spi_update(results);    
+        console8.spi_update(results);
+        //printf("exe time in miliseconds %f \n", (timer.get_elapsed_ns()-results)/1000);    
     }
     
 }

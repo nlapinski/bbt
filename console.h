@@ -95,6 +95,23 @@ char* replace_str(const char* s, const char* oldW, const char* newW)
     return result;
 }
 
+
+int stringify(char *dest, const char *target, const char *replace) {
+    char *p = strstr(dest, target);
+    if (p == NULL) {
+        /* no replacement */
+        return 0;
+    }
+    size_t len1 = strlen(target);
+    size_t len2 = strlen(replace);
+    if (len1 != len2) {
+        /* move the remainder of the string into the right place */
+        memmove(p + len2, p + len1, strlen(p + len1) + 1);
+    }
+    memcpy(p, replace, len2);
+    return 1;
+}
+
 char *stristr4(const char *haystack, const char *needle) {
     int c = tolower((unsigned char)*needle);
     if (c == '\0')
@@ -177,6 +194,7 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             char replace[2] = "t";
             char* result;
             result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
+            //stringify(temp_str, replace, time_str);
             uint8_t res = (uint8_t)calc((char*)result);
             strcpy(ResultBuf,result);
             double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
@@ -230,7 +248,7 @@ struct ExampleAppConsole
     float                 adc1arr[200];
     float                 adc2arr[200];
     std::thread           Worker;
-    int                   TimeMs;
+    double                TimeMs;
     double                IMin;
     double                IMax;
     double                OMin;
@@ -239,8 +257,15 @@ struct ExampleAppConsole
     int                   Pin;
     int                   Focused;
     bool                  init;
-    int                   NextTimeMs;
     double                LastTime;
+
+    long long             cret;
+    calculator::stacks     cs;
+    calculator::operators  cb;
+   //pegtl::memory_input in( argv, "input" );
+   //pegtl::parse< calculator::grammar, calculator::action >( in, b, s );
+   //ret = (long long)s.finish();
+   //return ret;
 
     ExampleAppConsole()
     {
@@ -267,8 +292,7 @@ struct ExampleAppConsole
         OMax = 10.0;
         IMin =0.0;
         IMax = 256.0;
-        TimeMs = 1000;
-        NextTimeMs=TimeMs;
+        TimeMs = 1000.0;
         Focused = 0;
         IDX=0;
         //Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
@@ -301,17 +325,25 @@ struct ExampleAppConsole
     
         if(results>LastTime){
             CurrentFrame+=1;
-            int t = (int)CurrentFrame;
-            char temp_str[256];
-            strcpy(temp_str,LastCommand);
+
+            strcpy(ResultBuf,LastCommand);
             char time_str[256];
-            snprintf(time_str,256,"%d",t);
+
+            itoa(CurrentFrame, time_str, 10);
+
             char replace[2] = "t";
-            char* result;
-            result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
-            uint8_t res = (uint8_t)calc((char*)result);
+            //stringify(ResultBuf, replace, time_str);        
+            char* result = replace_str((char*)ResultBuf, (char*)replace, (char*)time_str);
+            //char* result = replace_all((const char*)ResultBuf, (const char*)replace, (const char*)time_str);
+
             strcpy(ResultBuf,result);
+            //return;
+            //uint8_t res = (uint8_t)calc(ResultBuf);
+            pegtl::memory_input in( ResultBuf, "input" );
+            pegtl::parse< calculator::grammar, calculator::action >( in, cb, cs );
+            uint8_t res = (uint8_t)cs.finish();
             double voltage = flt_map((double)res,IMin,IMax,OMin,OMax);
+
             voltage = clamp(voltage,OMin,OMax);
             uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
             snprintf(ResultValue,256,"%6.2fv",voltage);
@@ -323,7 +355,7 @@ struct ExampleAppConsole
             adc1arr[IDX] = (float)((int)res*256);
             adc2arr[IDX] = voltage;
 
-            LastTime = results+((double)(TimeMs)*1.0);
+            LastTime = results+(TimeMs*1000);
         }
     }
 
@@ -503,13 +535,7 @@ struct ExampleAppConsole
         }
         else if (stristr4(command_line, "TIME") != NULL)
         {
-            int temp  = (int)atoi(command_line+5);
-            //if(temp<100){
-                //temp=100;
-            //}
-
-            NextTimeMs = temp;
-            TimeMs = temp;
+            TimeMs = strtod(command_line+5,NULL);
             AddLog("! set new time constant %s", command_line+5);
         }
         else if (stristr4(command_line, "FIT") != NULL)
