@@ -111,7 +111,7 @@ char *stristr4(const char *haystack, const char *needle) {
 
 void std_sleep_us(int microseconds)
 {
- /*   
+ 
         //std::chrono::microseconds dura( microseconds ); 
         //std::this_thread::sleep_for(dura);
     bool sleep = true;
@@ -122,7 +122,7 @@ void std_sleep_us(int microseconds)
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
         if ( elapsed.count() > microseconds )
             sleep = false;
-    }*/
+    }
 }
 
 
@@ -230,8 +230,8 @@ struct ExampleAppConsole
         IMax = 256.0;
         TimeMs = 10000;
         Focused = 0;
-        //Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
-        //Worker.detach();
+        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
+        Worker.detach();
     }
     ~ExampleAppConsole()
     {
