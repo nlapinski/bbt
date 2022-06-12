@@ -141,7 +141,7 @@ void std_sleep_us(int microseconds)
 }
 
 
-void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
+void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
     int IDX=0;
     struct timespec deadline;
@@ -151,47 +151,55 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
 
     while(true){
 
-        *CurrentFrame+=1;
-        int t = (int)*CurrentFrame;
-        char temp_str[256];
-        strcpy(temp_str,LastCommand);
-        char time_str[256];
-        snprintf(time_str,256,"%d",t);
-        char replace[2] = "t";
-        char* result;
-        result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
-        uint8_t res = (uint8_t)calc((char*)result);
-        strcpy(ResultBuf,result);
+        if(!reset){
+            *CurrentFrame+=1;
+            int t = (int)*CurrentFrame;
+            char temp_str[256];
+            strcpy(temp_str,LastCommand);
+            char time_str[256];
+            snprintf(time_str,256,"%d",t);
+            char replace[2] = "t";
+            char* result;
+            result = replace_str((char*)temp_str, (char*)replace, (char*)time_str);
+            uint8_t res = (uint8_t)calc((char*)result);
+            strcpy(ResultBuf,result);
 
-        double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
-        voltage = clamp(voltage,*omin,*omax);
-        uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
+            double voltage = flt_map((double)res,*imin,*imax,*omin,*omax);
+            voltage = clamp(voltage,*omin,*omax);
+            uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
 
-        snprintf(ResultValue,256,"%6.2fv",voltage);
+            snprintf(ResultValue,256,"%6.2fv",voltage);
 
-        write_pin(spi,*pin,(int)(dac_voltage));
+            write_pin(spi,*pin,(int)(dac_voltage));
 
-        IDX+=1;
-        if(IDX>200){
-            IDX=0;
+            IDX+=1;
+            if(IDX>200){
+                IDX=0;
+            }
+            adc1arr[IDX] = (float)((int)res*256);
+            adc2arr[IDX] = voltage;
+
+            //this breaks for soem reasons on linux? ruins how sdl ticks
+            //std_sleep_us(*ms);
+            //posix_nano(*ms);
+            clock_gettime(CLOCK_MONOTONIC, &deadline);
+
+            // Add the time you want to sleep
+            deadline.tv_nsec += *ms*1000;
+            // Normalize the time to account for the second boundary
+            if(deadline.tv_nsec >= 1000000000) {
+               deadline.tv_nsec -= 1000000000;
+                deadline.tv_sec++;
+            }
+            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
+            
+            *ms = *next_time;            
         }
-        adc1arr[IDX] = (float)((int)res*256);
-        adc2arr[IDX] = voltage;
-
-        //this breaks for soem reasons on linux? ruins how sdl ticks
-        //std_sleep_us(*ms);
-        //posix_nano(*ms);
-        clock_gettime(CLOCK_MONOTONIC, &deadline);
-
-        // Add the time you want to sleep
-        deadline.tv_nsec += *ms*1000;
-        // Normalize the time to account for the second boundary
-        if(deadline.tv_nsec >= 1000000000) {
-           deadline.tv_nsec -= 1000000000;
-            deadline.tv_sec++;
+        else{
+            *CurrentFrame=0;
         }
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-        }
+    }
+
 }
 
 std::vector<double> split_args(char* args){
@@ -235,6 +243,7 @@ struct ExampleAppConsole
     int                   Pin;
     int                   Focused;
     bool                  init;
+    int                   NextTimeMs;
 
     ExampleAppConsole()
     {
@@ -262,8 +271,9 @@ struct ExampleAppConsole
         IMin =0.0;
         IMax = 256.0;
         TimeMs = 10000;
+        NextTimeMs=TimeMs;
         Focused = 0;
-        Worker = std::thread(spi_task, &TimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
+        Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
         Worker.detach();
     }
     ~ExampleAppConsole()
@@ -453,14 +463,14 @@ struct ExampleAppConsole
         }
         else if (stristr4(command_line, "RESET") != NULL)
         {
-            CurrentFrame=0;
+            //CurrentFrame=0;
             reset = true;
             AddLog("! reset frame counter to zero");
         }
         else if (stristr4(command_line, "TIME") != NULL)
         {
             
-            TimeMs = (int)atoi(command_line+5);
+            NextTimeMs = (int)atoi(command_line+5);
             AddLog("! set new time constant %s", command_line+5);
         }
         else if (stristr4(command_line, "FIT") != NULL)

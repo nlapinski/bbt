@@ -89,16 +89,16 @@ static void ShowExampleAppConsole(bool* p_open, bool* reset)
     console7.Draw("mod 7", p_open,2,1,6);
     console8.Draw("mod 8", p_open,3,1,7);
 
-
+    
     if(*reset){
-        console1.CurrentFrame=0;
-        console2.CurrentFrame=0;
-        console3.CurrentFrame=0;
-        console4.CurrentFrame=0;
-        console5.CurrentFrame=0;
-        console6.CurrentFrame=0;
-        console7.CurrentFrame=0;
-        console8.CurrentFrame=0;
+        //console1.CurrentFrame=0;
+        //console2.CurrentFrame=0;
+        //console3.CurrentFrame=0;
+        //console4.CurrentFrame=0;
+        //console5.CurrentFrame=0;
+        //console6.CurrentFrame=0;
+        //console7.CurrentFrame=0;
+        //console8.CurrentFrame=0;
         *reset = false;
     }
 }
