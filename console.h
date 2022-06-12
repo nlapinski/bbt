@@ -16,7 +16,7 @@
 extern mraa_spi_context spi;
 extern bool reset;
 extern plf::nanotimer timer;
-
+extern bool pin_lock;
 char* mitoa(int val, int base){
     
     static char buf[256] = {0};
@@ -215,7 +215,11 @@ void spi_task(int* ms, int* next_time,char* cmd, int *pin, char* ResultBuf, char
             voltage = clamp(voltage,*omin,*omax);
             uint32_t dac_voltage = int_map(clamp(voltage,-10,10),-10.0,10.0,0.0,65535.0);
             snprintf(ResultValue,256,"%6.2fv",voltage);
-            write_pin(spi,*pin,(int)(dac_voltage));
+            while(!pin_lock){
+                    pin_lock=true;
+                    write_pin(spi,*pin,(int)(dac_voltage));
+                    pin_lock=false;
+            }
             IDX+=1;
             if(IDX>200){
                 IDX=0;

@@ -49,7 +49,7 @@
 
 //global spi context
 mraa_spi_context spi;
-
+bool pin_lock =false;
 bool reset = true;
 
 plf::nanotimer timer;
