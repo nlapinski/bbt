@@ -175,14 +175,14 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         adc1arr[IDX] = (float)((int)res*256);
         adc2arr[IDX] = voltage;
 
-        //this breaks for soem reasons on linux? ruins how sdl ticks
+        //this breaks for some reasons on linux? ruins how sdl ticks
         //std_sleep_us(*ms);
         //posix_nano(*ms);
         clock_gettime(CLOCK_MONOTONIC, &deadline);
 
         // Add the time you want to sleep
         deadline.tv_nsec += *ms*1000;
-
+        
         // Normalize the time to account for the second boundary
         if(deadline.tv_nsec >= 1000000000) {
            deadline.tv_nsec -= 1000000000;
