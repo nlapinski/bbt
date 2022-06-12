@@ -230,6 +230,7 @@ int main(int, char**)
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -247,8 +248,6 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
     int cur_mod=0;
-
-
 
     // Main loop
     bool done = false;
