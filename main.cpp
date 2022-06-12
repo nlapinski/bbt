@@ -81,13 +81,13 @@ void init_dac(){
 
 void spi_manager_A(){
     double results;
-    /*
+    
     struct sched_param sp;
-    sp.sched_priority = 95;
+    sp.sched_priority = 80;
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
         printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
     }
-    */
+    
 
     while(true){
         results = timer.get_elapsed_ns();
@@ -107,13 +107,13 @@ void spi_manager_A(){
 
 void spi_manager_B(){
     double results;
-    /*
+    
     struct sched_param sp;
-    sp.sched_priority = 95;
+    sp.sched_priority = 80;
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
         printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
     }
-    */
+    
 
     while(true){
         results = timer.get_elapsed_ns();
@@ -255,15 +255,15 @@ int main(int, char**)
 
     //disable stdout buff
     std::setvbuf(stdout, NULL, _IONBF, 0);
-    /*
-    #ifdef __linux__ 
-        //linux prioritiy
-        struct sched_param sp;
-        sp.sched_priority = 95;
-        if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
-            printf("WARNING: Failed to set bbt MAIN thread to real-time priority \n");
-        }
-    #endif*/
+
+    
+    //linux prioritiy
+    struct sched_param sp;
+    sp.sched_priority = 80;
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
+        printf("WARNING: Failed to set bbt MAIN thread to real-time priority \n");
+    }
+
 
     timer.start();
     std::thread           ManagerA;
