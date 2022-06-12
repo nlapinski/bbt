@@ -9,6 +9,8 @@
     #include "pthread.h"
 #endif
 
+#include <chrono>
+
 //global spi context
 extern mraa_spi_context spi;
 extern bool reset;
@@ -111,7 +113,7 @@ char *stristr4(const char *haystack, const char *needle) {
 
 void std_sleep_us(int microseconds)
 {
- 
+ /*
         //std::chrono::microseconds dura( microseconds ); 
         //std::this_thread::sleep_for(dura);
     bool sleep = true;
@@ -122,7 +124,7 @@ void std_sleep_us(int microseconds)
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start);
         if ( elapsed.count() > microseconds )
             sleep = false;
-    }
+    }*/
 }
 
 

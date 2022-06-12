@@ -19,8 +19,8 @@
 
 #include <string.h>
 #include <thread>
-#include <time.h>
-#include <chrono>
+//#include <time.h>
+
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
