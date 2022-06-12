@@ -156,18 +156,11 @@ int main(int, char**)
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 1);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
 
-    //SDL_DisplayMode DM;
-    //SDL_GetCurrentDisplayMode(0, &DM);
-    //auto swidth = DM.w;
-    //auto sheight = DM.h;
-
-
-
-    //SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE );
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI| SDL_WINDOW_BORDERLESS);
+    
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -190,23 +183,17 @@ int main(int, char**)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     ImVec4 clear_color = ImVec4(0.05f, .05f, 0.05f, 1.00f);
-    
-    ///ImGuiContext& g = *GImGui;    
-    //g.NavDisableHighlight = false;
-    //disable ini
-    
+        
     int cur_mod=0;
 
     // Main loop
     bool done = false;
-    char focus_window[128];
+    char focus_window[16];
     bool console1=true;    
 
     while (!done)
     {
-
         printf("%f \n",ImGui::GetIO().Framerate);
-
         SDL_Event event;
 
         if(ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -235,7 +222,7 @@ int main(int, char**)
             if(cur_mod>8){
                 cur_mod=0;
             }
-            snprintf(focus_window, 128, "mod %d", cur_mod);
+            snprintf(focus_window, 16, "mod %d", cur_mod);
             ImGui::SetWindowFocus((const char*)focus_window);
         }
         if(ImGui::IsKeyPressed(ImGuiKey_Tab) && io.KeyShift){
@@ -243,7 +230,7 @@ int main(int, char**)
             if(cur_mod<0){
                 cur_mod=8;
             }
-            snprintf(focus_window, 128, "mod %d", cur_mod);
+            snprintf(focus_window, 16, "mod %d", cur_mod);
             ImGui::SetWindowFocus((const char*)focus_window);
         }
 
@@ -251,11 +238,13 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
         glViewport(0, 0, 1024, 600);
-        glBlendFunc( GL_ONE,  GL_SRC1_ALPHA);
+        //??
+        //glBlendFunc( GL_ONE,  GL_SRC1_ALPHA);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
+
         
     }
 
