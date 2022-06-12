@@ -53,7 +53,7 @@ endif
 
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
-	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs` -lSDL2_mixer
+	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs`
 	LIBS += -L/usr/local/lib -L/opt/local/lib
 	CXXFLAGS += `sdl2-config --cflags`
 	CXXFLAGS += -I/usr/local/include -I/opt/local/include
@@ -62,7 +62,7 @@ endif
 
 ifeq ($(OS), Windows_NT)
     ECHO_MESSAGE = "MinGW"
-    LIBS += -lgdi32 -lopengl32 -limm32 `pkg-config --static --libs sdl2` -lpthread -lSDL2_mixer
+    LIBS += -lgdi32 -lopengl32 -limm32 `pkg-config --static --libs sdl2` -lpthread
 
     CXXFLAGS += `pkg-config --cflags sdl2`
     CFLAGS = $(CXXFLAGS)

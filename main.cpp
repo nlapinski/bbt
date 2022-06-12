@@ -9,13 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#define AUDIO_ON 1
-#define AUDIO_OFF 0
-#define AUDIO AUDIO_OFF
-
 #include <sys/time.h>
-
-
 
 //so we can build on mingw+linux
 #ifdef __linux__ 
@@ -46,10 +40,6 @@
 #include "console.h"
 #include "theme.h"
 
-#if AUDIO == AUDIO_ON
-    #include "SDL_mixer.h"
-#endif
-
 
 /* SPI declaration */
 #define SPI_BUS 0
@@ -65,34 +55,8 @@ mraa_spi_context spi;
 
 bool reset = true;
 
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-//audio globals
-int current_channel = 0;
-
-//////////////////////////////////////////////////////////////////////////////////////////
-#define NUM_WAVEFORMS 5
-
-#if AUDIO == AUDIO_ON
-    const char* _waveFileNames[] =
-    {
-    "kit/kick.wav",
-    "kit/clap.wav",
-    "kit/open_hat.wav",
-    "kit/closed_hat.wav",
-    "kit/snare.wav",
-    };
-
-    Mix_Chunk* _sample[5];
-#endif
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
-
 
 void init_dac(){
 
@@ -145,26 +109,7 @@ void textbox(){
     static char name[128] = ""; 
     ImGui::Text("Nome: "); ImGui::SameLine(); ImGui::InputText("", name, IM_ARRAYSIZE(name));
 }
-#if AUDIO == AUDIO_ON
-    void init_audio(){
-        memset(_sample, 0, sizeof(Mix_Chunk*) * 5);
 
-        // Set up the audio stream
-        Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
-        //SDL_PauseAudioDevice(deviceId, 0);
-        Mix_AllocateChannels(32);
-
-        // Load waveforms
-        for( int i = 0; i < NUM_WAVEFORMS; i++ )
-        {
-            _sample[i] = Mix_LoadWAV(_waveFileNames[i]);
-            if( _sample[i] == NULL )
-            {
-                fprintf(stderr, "Unable to load wave file: %s\n", _waveFileNames[i]);
-            }
-        }
-    }
-#endif
 // Main code
 int main(int, char**)
 //int main( int argc, char** argv )
@@ -209,22 +154,14 @@ int main(int, char**)
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
-    #if AUDIO == AUDIO_ON
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
-        {
-            printf("Error: %s\n", SDL_GetError());
-            return -1;
-        }
-    #endif
-        
-    #if AUDIO == AUDIO_OFF
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-        {
-            printf("Error: %s\n", SDL_GetError());
-            return -1;
-        }
-    #endif
 
+        
+
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return -1;
+    }
 
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -263,7 +200,7 @@ int main(int, char**)
 
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL |  SDL_WINDOW_BORDERLESS |  SDL_WINDOW_INPUT_GRABBED );
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Window* window = SDL_CreateWindow("bytebeat cv", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
+    SDL_Window* window = SDL_CreateWindow("bytebea", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -275,7 +212,7 @@ int main(int, char**)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |=  ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;     // Enable Keyboard Controls
     io.IniFilename = NULL;
-    
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     imtheme();
@@ -294,11 +231,7 @@ int main(int, char**)
     
 
     // Main loop
-    #if AUDIO == AUDIO_ON
-        init_audio();    
-    #endif
 
-    
 
     bool done = false;
     
@@ -390,11 +323,6 @@ int main(int, char**)
     mraa_spi_stop(spi);
     mraa_deinit();
 
-    #if AUDIO == AUDIO_ON
-        Mix_CloseAudio();
-    #endif
-
-    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();

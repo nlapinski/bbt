@@ -2,26 +2,15 @@
 #ifdef __linux__ 
     /* mraa header */
     #include "mraa/spi.h"
+    #include "pthread.h"
 #endif
 #ifdef __MINGW32__
     #include "winmraa.h"
     #include "pthread.h"
 #endif
 
-#define AUDIO_ON 1
-#define AUDIO_OFF 0
-#define AUDIO AUDIO_OFF
-
-#if AUDIO == AUDIO_ON
-    #include "SDL_mixer.h"
-    extern int current_channel;
-    extern Mix_Chunk* _sample[5];
-#endif
-
 //global spi context
 extern mraa_spi_context spi;
-
-
 extern bool reset;
 
 //double fit range
@@ -184,15 +173,6 @@ void std_sleep_us(int microseconds)
     }
 }
 
-#if AUDIO == AUDIO_ON
-    void trigger_sample(int idx){
-        Mix_PlayChannel(current_channel, _sample[idx], 0);
-        current_channel+=1;
-        if(current_channel>31){
-            current_channel=0;
-        }
-    }
-#endif
 
 void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
@@ -229,12 +209,6 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
 
         snprintf(ResultValue,256,"%6.2fv",voltage);
 
-        #if AUDIO == AUDIO_ON
-            if(voltage>5 && *pin<4){
-                trigger_sample(*pin);
-            }
-        #endif
-        
         write_pin(spi,*pin,(int)(dac_voltage));
 
         IDX+=1;
@@ -402,15 +376,13 @@ struct ExampleAppConsole
         //manage expression replacement with time 
         if(!Focused){
             ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-                //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
+            //ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(wsize.x,wsize.y/2));
             ImGui::Dummy(ImVec2(0.0f, 14.0f));
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
             ImGui::Dummy(ImVec2(0.0f, 0.0f));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
-            //printf("%f %f \n", wsize.x,wsize.y/2.5);
             ImGui::PopStyleColor();
-
             ImGui::EndChild();
 
         }
