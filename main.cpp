@@ -109,7 +109,7 @@ void spi_manager_B(){
     double results;
     
     struct sched_param sp;
-    sp.sched_priority = 80;
+    sp.sched_priority = 90;
     if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp)){
         printf("WARNING: Failed to set bbt MANAGER thread to real-time priority \n");
     }
