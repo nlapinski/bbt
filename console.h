@@ -322,7 +322,7 @@ struct ExampleAppConsole
         OMax = 10.0;
         IMin =0.0;
         IMax = 256.0;
-        TimeMs = 1000.0;
+        TimeMs = 4000.0;
         Focused = 0;
         IDX=0;
         //Worker = std::thread(spi_task, &TimeMs, &NextTimeMs,Cmd,&Pin, ResultBuf,ResultValue,LastCommand,&CurrentFrame, adc1arr,adc2arr, &IMin,&IMax,&OMin,&OMax);
