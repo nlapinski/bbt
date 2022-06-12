@@ -10,6 +10,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
+#include <sched.h>
 
 //so we can build on mingw+linux
 #ifdef __linux__ 
@@ -19,8 +20,7 @@
 
 #include <string.h>
 #include <thread>
-//#include <time.h>
-
+#include <time.h>
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -42,9 +42,9 @@
 #define SPI_BUS 0
 /* SPI frequency in Hz */
 //15mhz
-#define SPI_FREQ 15000000
+//#define SPI_FREQ 15000000
 //#define SPI_FREQ 10000000
-//#define SPI_FREQ 50000000
+#define SPI_FREQ 50000000
 //#define SPI_FREQ 2147773188
 
 //global spi context
@@ -155,16 +155,16 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     // Create window with graphics context
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 1);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
 
     
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN);
     SDL_Window* window = SDL_CreateWindow("ByteBeat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(0); // Enable vsync
+    //SDL_GL_SetSwapInterval(0); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
