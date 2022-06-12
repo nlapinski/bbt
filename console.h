@@ -219,9 +219,11 @@ struct ExampleAppConsole
     char                  Cmd[256];
     int                   Pin;
     int                   Focused;
+    bool                  init;
 
     ExampleAppConsole()
     {
+        init = true;
         ClearLog();
         memset(InputBuf, 0, sizeof(InputBuf));
         HistoryPos = -1;
@@ -281,17 +283,19 @@ struct ExampleAppConsole
         Items.push_back(Strdup(buf));
     }
 
-
     void    Draw(const char* title, bool* p_open,int x , int y, int pin)
     {
         Pin = pin;                     
-        ImVec2 new_size = ImVec2(256,300);
-        ImGui::SetNextWindowSize(new_size);
+        if(init){
+            ImVec2 new_size = ImVec2(256,300);
+            ImGui::SetNextWindowSize(new_size, ImGuiCond_Once);
         
-        float ox = new_size.x * x;
-        float oy = new_size.y * y;
-        ImVec2 new_p = ImVec2(ox,oy);                
-        ImGui::SetNextWindowPos(new_p);
+            float ox = new_size.x * x;
+            float oy = new_size.y * y;
+            ImVec2 new_p = ImVec2(ox,oy);                
+            ImGui::SetNextWindowPos(new_p, ImGuiCond_Once);
+            init = false;
+        }
 
         if (!ImGui::Begin(title, p_open,ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize  ))
         {
@@ -310,21 +314,19 @@ struct ExampleAppConsole
         //////////////////////////////////////////////////////////////////////////////////////////
         
         
-
-
-        //ImVec2 wsize = ImGui::GetWindowSize();
+        
 
         //manage expression replacement with time 
         if(!Focused){
             
-            //ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-            //ImGui::Dummy(ImVec2(0.0f, 10.0f));
+            ImGui::BeginChild("graph", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+            ImGui::Dummy(ImVec2(0.0f, 10.0f));
             ImGui::PlotLines("ADC1", adc1arr, IM_ARRAYSIZE(adc1arr), 0, NULL, 0.0, 65535.0, ImVec2(256,120));
-            //ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            ImGui::Dummy(ImVec2(0.0f, 0.0f));
             ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.0f, 0.90f, 0.72f, 1.00f));
             ImGui::PlotLines("ADC2", adc2arr, IM_ARRAYSIZE(adc2arr), 0, NULL, -10.0, 10.0, ImVec2(256,120));
             ImGui::PopStyleColor();
-            //ImGui::EndChild();
+            ImGui::EndChild();
 
         }
 
@@ -396,7 +398,6 @@ struct ExampleAppConsole
 
             ImGui::Text("Expanded: %s", ResultBuf); 
             ImGui::Text("Value: %s | Time: %llu", ResultValue, CurrentFrame);
-            //ImGui::Text("Time: %llu",CurrentFrame); 
         }
         ImGui::End();
 

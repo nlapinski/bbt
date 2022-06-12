@@ -177,7 +177,6 @@ int main(int, char**)
     ImGui::StyleColorsDark();
     imtheme();
 
-
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -190,10 +189,11 @@ int main(int, char**)
     bool done = false;
     char focus_window[16];
     bool console1=true;    
+    glViewport(0, 0, 1024, 600);
 
     while (!done)
     {
-        printf("%f \n",ImGui::GetIO().Framerate);
+        //printf("%f \n",ImGui::GetIO().Framerate);
         SDL_Event event;
 
         if(ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -237,14 +237,13 @@ int main(int, char**)
         ShowExampleAppConsole(&console1,&reset);
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, 1024, 600);
+        
         //??
         //glBlendFunc( GL_ONE,  GL_SRC1_ALPHA);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClearColor(clear_color.x , clear_color.y , clear_color.z , clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
-
         
     }
 
