@@ -14,7 +14,6 @@
 //global spi context
 extern mraa_spi_context spi;
 extern bool reset;
-extern struct timespec deadline;
 
 //double fit range
 double flt_map(double x, double in_min, double in_max, double out_min, double out_max)
@@ -110,7 +109,7 @@ char *stristr4(const char *haystack, const char *needle) {
     }
     return NULL;
 }
-/*
+
 void posix_nano(int microseconds){
     struct timespec deadline;
     clock_gettime(CLOCK_MONOTONIC, &deadline);
@@ -124,7 +123,7 @@ void posix_nano(int microseconds){
         deadline.tv_sec++;
     }
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-}*/
+}
 
 
 void std_sleep_us(int microseconds)
@@ -145,7 +144,7 @@ void std_sleep_us(int microseconds)
 void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, char* LastCommand, unsigned long long *CurrentFrame, float* adc1arr,float* adc2arr, double* imin, double* imax, double* omin, double* omax){
     //int t = 0;
     int IDX=0;
-    //struct timespec deadline;
+    struct timespec deadline;
     while(true){
 
         *CurrentFrame+=1;
@@ -175,14 +174,13 @@ void spi_task(int* ms,char* cmd, int *pin, char* ResultBuf, char* ResultValue, c
         adc1arr[IDX] = (float)((int)res*256);
         adc2arr[IDX] = voltage;
 
-        //this breaks for some reasons on linux? ruins how sdl ticks
+        //this breaks for soem reasons on linux? ruins how sdl ticks
         //std_sleep_us(*ms);
         //posix_nano(*ms);
         clock_gettime(CLOCK_MONOTONIC, &deadline);
 
         // Add the time you want to sleep
         deadline.tv_nsec += *ms*1000;
-        
         // Normalize the time to account for the second boundary
         if(deadline.tv_nsec >= 1000000000) {
            deadline.tv_nsec -= 1000000000;
