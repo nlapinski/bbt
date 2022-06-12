@@ -218,6 +218,7 @@ int main(int, char**)
     int cur_mod=0;
 
 
+
     // Main loop
     bool done = false;
     char focus_window[16];
